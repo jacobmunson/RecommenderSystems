@@ -6,12 +6,18 @@ u4 = c(2,4,NA,NA,NA,NA,NA)
 u5 = c(2,1,4,NA,NA,NA,NA)
 u6 = c(NA,NA,NA,NA,NA,2,4)
 ratings_matrix = t(data.frame(u1,u2,u3,u4,u5,u6))
+ratings_matrix[1:15,1:15] # Customer by ratings matrix 
 ratings_matrix[is.na(ratings_matrix)] = 0
 
-coraters = ratings_matrix %*% t(ratings_matrix)
-coraters[coraters > 0] = 1 # reassigning positives to unity
+coraters = as.matrix(ratings_matrix) %*% as.matrix(t(ratings_matrix))
+
+coraters[coraters > 0] = 1 # reassigning positives to unity - this will operate as a indicator 
 isSymmetric(coraters) # sanity check
 
+coraters[1:15,1:15]
+
+
+# Changing NAs to zeroes so routine similarity measures work as expected
 ratings_matrix[is.na(ratings_matrix)] = 0 #NA
 #ratings_matrix %>% rowwise() %>% summarise(sum())
 #length(ratings_matrix)
@@ -31,11 +37,24 @@ cosine_similarity = function(matrix){
 #apply(ratings_matrix[which(coraters == 1),], MARGIN = 1, FUN = cosine_similarity())
 #apply(ratings_matrix, MARGIN = c(1,2), FUN = cosine_similarity())
 
+# Users that have co-rated items (on a per-user basis)
 user_ratings = apply(coraters, MARGIN = 1, FUN = function(x)(which(x == 1)))
+user_ratings$`1`
 
+# Those above users evaluated in the ratings matrix
 corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]})
 
-#corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]})
+corated_vectors
+
+sapply(corated_vectors, FUN = function(x){nrow(x)*ncol(x)})
+
+
+
+cat(sum(sapply(corated_vectors, FUN = function(x){nrow(x)*ncol(x)})), 
+    "elements to evaluate out of", 
+    nrow(ratings_matrix)*ncol(ratings_matrix),"total elements") 
+# for small datasets this is redundant, but becomes advantageous with large sparse matrices
+
 
 # Cosine Similarity
 # check in RS Textbook, but usually on whole users (not just those co-rating)
@@ -63,6 +82,7 @@ user_rows = unlist(user_rows)
 extract_user_rows = function(i){lapply(sim_msr[i], FUN = function(x){x[user_rows[i],]})}
 extracted_user_similarities = sapply(1:length(user_rows), extract_user_rows)
 
+extracted_user_similarities
 lapply(extracted_user_similarities, FUN = sort, decreasing = TRUE)
 
 
