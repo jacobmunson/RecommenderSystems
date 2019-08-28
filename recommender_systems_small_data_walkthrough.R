@@ -1,3 +1,5 @@
+
+# working on this file stored locally - so it will be a mess often
 # Sample fictitious dataset
 u1 = c(1,3,NA,NA,4,5,NA)
 u2 = c(2,NA,5,NA,NA,NA,NA)
@@ -7,15 +9,24 @@ u5 = c(2,1,4,NA,NA,NA,NA)
 u6 = c(NA,NA,NA,NA,NA,2,4)
 ratings_matrix = t(data.frame(u1,u2,u3,u4,u5,u6))
 ratings_matrix[is.na(ratings_matrix)] = 0
+ratings_matrix[1:15,1:15]
 
-coraters = ratings_matrix %*% t(ratings_matrix)
+coraters = ratings_matrix %*% t(ratings_matrix) # these have to be matrices
 coraters[coraters > 0] = 1 # reassigning positives to unity
 isSymmetric(coraters) # sanity check
+coraters[1:15,1:15]
 
-ratings_matrix[is.na(ratings_matrix)] = 0 #NA
+#ratings_matrix[is.na(ratings_matrix)] = 0 #NA
 #ratings_matrix %>% rowwise() %>% summarise(sum())
 #length(ratings_matrix)
 #?rowwise
+
+sparsity = function(matrix){
+  sparsity = length(which(matrix == 0))/(nrow(matrix)*ncol(matrix))
+  return(sparsity)
+}
+
+sparsity(ratings_matrix)
 
 cosine_similarity = function(matrix){
   cos_sim = matrix/sqrt(rowSums(matrix * matrix))
@@ -31,21 +42,148 @@ cosine_similarity = function(matrix){
 #apply(ratings_matrix[which(coraters == 1),], MARGIN = 1, FUN = cosine_similarity())
 #apply(ratings_matrix, MARGIN = c(1,2), FUN = cosine_similarity())
 
-user_ratings = apply(coraters, MARGIN = 1, FUN = function(x)(which(x == 1)))
+user_ratings = apply(coraters, MARGIN = 1, FUN = function(x)(unique(which(x == 1))))
+
 
 corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]})
-
+corated_vectors$`1`[1:10,1:16]
 #corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]})
 
 # Cosine Similarity
-# check in RS Textbook, but usually on whole users (not just those co-rating)
-# I think this is fine though, also helps with sparsity problems 
+# check in RS Textbook, but usually on all users (not just those co-rating user, but non-corating users just go to 0 anyways)
+# This is fine though, also helps with sparsity problems - in the really large scale at least
 user_cosine_similarity = lapply(corated_vectors, FUN = cosine_similarity)
 
-# Pearson Similarity uses 
+
+
+user_cosine_similarity$`2`[1:15,1:10]
+
+test_ps = cor(ratings_matrix)
+test_cs = cosine_similarity(matrix = ratings_matrix)
+test_ps[1:5,1:13]
+
+### Pearson Similarity  
 # this isn't correct - should be as-in LiRa paper (also RS Textbook)
 # i.e. get mean value for each user
-user_pearson_similarity = lapply(lapply(corated_vectors, FUN = t), FUN = cor)
+# Correct: 
+pearson_similarity_matrix = matrix(data = 0, 
+                                    nrow = length(unique(D$userId)), 
+                                    ncol = length(unique(D$userId)), 
+                                    dimnames = list(unique(D$userId),unique(D$userId)))
+
+# User Averages
+
+user_averages = apply(ratings_matrix, MARGIN = 1, FUN = function(x){mean(x[which(x != 0)])})
+user_averages[1:10]
+
+for(u in 1:length(unique(D$userId))){ # first time ever indexing for loops on u,v
+  for(v in 1:length(unique(D$userId))){ # just following notation from RS Textbook
+    if(u > v){
+      user_u_ratings = ratings_matrix[which(rownames(ratings_matrix) == u),]
+      user_v_ratings = ratings_matrix[which(rownames(ratings_matrix) == v),]
+      
+      user_uv_ratings = which(user_u_ratings %*% t(user_v_ratings) != 0) # nonzero elements are places both have rated
+      
+      r_uk = user_u_ratings[user_uv_ratings]
+      r_vk = user_v_ratings[user_uv_ratings]
+      
+      pc_num = sum((r_uk - user_averages[which(names(user_averages) == u)]) * (r_vk - user_averages[which(names(user_averages) == v)]))
+      
+      pc_denom = sqrt(sum((r_uk - user_averages[which(names(user_averages) == u)])^2)) * sqrt(sum((r_vk - user_averages[which(names(user_averages) == v)])^2))
+      
+      
+      pc = pc_num/pc_denom
+      pearson_similarity_matrix[u,v] = pc
+      cat("\n","u:",u,"v:",v)
+    }
+  }
+}
+
+
+test_pc = lapply(1:length(unique(D$userId)), outer_function)
+
+outer_function = function(u){ # first time ever indexing for loops on u,v
+  
+  lapply(1:length(unique(D$userId)), inner_function)
+}
+
+inner_function = function(v){ # just following notation from RS Textbook
+  if(u > v){
+    user_u_ratings = ratings_matrix[which(rownames(ratings_matrix) == u),]
+    user_v_ratings = ratings_matrix[which(rownames(ratings_matrix) == v),]
+    
+    user_uv_ratings = which(user_u_ratings %*% t(user_v_ratings) != 0) # nonzero elements are places both have rated
+    
+    r_uk = user_u_ratings[user_uv_ratings]
+    r_vk = user_v_ratings[user_uv_ratings]
+    
+    pc_num = sum((r_uk - user_averages[which(names(user_averages) == u)]) * (r_vk - user_averages[which(names(user_averages) == v)]))
+    
+    pc_denom = sqrt(sum((r_uk - user_averages[which(names(user_averages) == u)])^2)) * sqrt(sum((r_vk - user_averages[which(names(user_averages) == v)])^2))
+    
+    
+    pc = pc_num/pc_denom
+    return(pc)
+    #pearson_similarity_matrix[u,v] = pc
+    #cat("\n","u:",u,"v:",v)
+  }
+}
+
+
+
+
+inner_function = function(v){      
+    user_u_ratings = ratings_matrix[which(rownames(ratings_matrix) == u),]
+    user_v_ratings = ratings_matrix[which(rownames(ratings_matrix) == v),]
+    
+    user_uv_ratings = which(user_u_ratings %*% t(user_v_ratings) != 0) # nonzero elements are places both have rated
+    
+    r_uk = user_u_ratings[user_uv_ratings]
+    r_vk = user_v_ratings[user_uv_ratings]
+    
+    pc_num = sum((r_uk - user_averages[which(names(user_averages) == u)]) * (r_vk - user_averages[which(names(user_averages) == v)]))
+    
+    pc_denom = sqrt(sum((r_uk - user_averages[which(names(user_averages) == u)])^2)) * sqrt(sum((r_vk - user_averages[which(names(user_averages) == v)])^2))
+    
+    
+    pc = pc_num/pc_denom
+    return(pc)
+    #pearson_similarity_matrix[u,v] = pc
+    #cat("\n","u:",u,"v:",v)
+}
+
+outer_function = function(u){inner_function(v)}
+
+sapply(X = )
+
+
+sapply(X = 1:length(unique(D$userId)), FUN = inner_function)
+Vectorize(inner_function, SIMPLIFY = TRUE)
+
+inner_function(pearson_similarity_matrix)
+
+apply(X = pearson_similarity_matrix, MARGIN = 1:2, FUN = inner_function)
+
+outer_function = function(u){}
+
+sapply(1:length(unique(D$userId)), inner_function)
+
+
+user_averages[1:5]
+
+mean(ratings_matrix[2,][which(ratings_matrix[2,] != 0)])
+
+pearson_similarity_matrix[1:15,1:15]
+
+
+
+
+test = lapply(corated_vectors, FUN = t)
+
+user_pearson_similarity = lapply(test, FUN = cor)
+user_pearson_similarity = lapply(lapply(corated_vectors, FUN = t), FUN = cor) # this needs to be totally scrapped, working on a better implementation
+
+user_pearson_similarity$`1`[1:5,1:10]
 
 str(user_cosine_similarity)
 
@@ -54,7 +192,6 @@ sim_msr = user_cosine_similarity
 sort(user_cosine_similarity$u1[1,], decreasing = TRUE)[-1] # [1:k]
 
 users = names(sim_msr)
-
 
 extract_users = function(i){lapply(sim_msr[i], FUN = function(x){which(users[i] == rownames(x))})}
 user_rows = sapply(1:length(users), extract_users)
