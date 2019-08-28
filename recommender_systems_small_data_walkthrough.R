@@ -82,7 +82,7 @@ for(u in 1:length(unique(D$userId))){ # first time ever indexing for loops on u,
       user_u_ratings = ratings_matrix[which(rownames(ratings_matrix) == u),]
       user_v_ratings = ratings_matrix[which(rownames(ratings_matrix) == v),]
       
-      user_uv_ratings = which(user_u_ratings %*% t(user_v_ratings) != 0) # nonzero elements are places both have rated
+      user_uv_ratings = which(user_u_ratings %*% t(user_v_ratings) != 0) # nonzero elements at places both have rated
       
       r_uk = user_u_ratings[user_uv_ratings]
       r_vk = user_v_ratings[user_uv_ratings]
@@ -99,6 +99,16 @@ for(u in 1:length(unique(D$userId))){ # first time ever indexing for loops on u,
   }
 }
 
+
+pc = matrix(data = 0, 
+            nrow = length(unique(D$userId)), 
+            ncol = length(unique(D$userId)), 
+            dimnames = list(unique(D$userId),unique(D$userId)))
+
+
+
+
+pearson_similarity_matrix[1:50,1:70]
 
 test_pc = lapply(1:length(unique(D$userId)), outer_function)
 
