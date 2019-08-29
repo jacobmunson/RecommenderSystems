@@ -1,4 +1,4 @@
-
+### this file has largely turn into scraps for now
 # working on this file stored locally - so it will be a mess often
 # Sample fictitious dataset
 u1 = c(1,3,NA,NA,4,5,NA)
@@ -12,26 +12,23 @@ ratings_matrix[1:15,1:15] # Customer by ratings matrix
 ratings_matrix[is.na(ratings_matrix)] = 0
 ratings_matrix[1:15,1:15]
 
-<<<<<<< HEAD
 coraters = as.matrix(ratings_matrix) %*% as.matrix(t(ratings_matrix))
 
 coraters[coraters > 0] = 1 # reassigning positives to unity - this will operate as a indicator 
-=======
+
 coraters = ratings_matrix %*% t(ratings_matrix) # these have to be matrices
 coraters[coraters > 0] = 1 # reassigning positives to unity
->>>>>>> b056c202b63ebe65078d57db4526306292990981
+
 isSymmetric(coraters) # sanity check
 coraters[1:15,1:15]
 
-<<<<<<< HEAD
 coraters[1:15,1:15]
 
 
 # Changing NAs to zeroes so routine similarity measures work as expected
 ratings_matrix[is.na(ratings_matrix)] = 0 #NA
-=======
+
 #ratings_matrix[is.na(ratings_matrix)] = 0 #NA
->>>>>>> b056c202b63ebe65078d57db4526306292990981
 #ratings_matrix %>% rowwise() %>% summarise(sum())
 #length(ratings_matrix)
 #?rowwise

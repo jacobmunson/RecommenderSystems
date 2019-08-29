@@ -12,7 +12,6 @@ print(ratings_matrix)
 
 cor(ratings_matrix, use = 'pairwise.complete.obs')
 
-
 ### A Variety of Basic Imputation Techniques 
 
 

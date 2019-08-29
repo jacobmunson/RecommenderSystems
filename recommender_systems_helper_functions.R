@@ -6,7 +6,7 @@
 impute_mean <- function(x){ifelse (is.na(x), mean(x, na.rm = TRUE), x)}
 impute_median <- function(x){ifelse (is.na(x), median(x, na.rm = TRUE), x)}
 impute_min <- function(x){ifelse (is.na(x), min(x, na.rm = TRUE), x)}
-impute_min <- function(x){ifelse (is.na(x), max(x, na.rm = TRUE), x)}
+impute_max <- function(x){ifelse (is.na(x), max(x, na.rm = TRUE), x)}
 
 cosine_similarity = function(matrix){
   cos_sim = matrix/sqrt(rowSums(matrix * matrix))
