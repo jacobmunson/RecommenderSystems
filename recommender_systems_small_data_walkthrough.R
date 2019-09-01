@@ -280,3 +280,34 @@ rated_items = apply(X = ratings_matrix, MARGIN = 1, function(x) (which(!is.na(x)
 
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x))) }
+                    
+                    
+                    
+                    
+                    
+                    customer_pairs = t(combn(unique(df$users), m = 2))
+#customer_pairs = expand.grid(unique(df$users),unique(df$users))
+#customer_pairs = customer_pairs[customer_pairs$Var1 != customer_pairs$Var2,]
+A = sapply(1:nrow(customer_pairs), FUN = pairwise_similarities) # sapply worked
+cbind(customer_pairs,unlist(A))
+
+pairwise_similarities = function(i){
+  #i = 4
+  u1_i = dcast(data = df[which(df$users == customer_pairs[i,1]),], formula = users~movies, value.var = "ratings")
+  u2_i = dcast(data = df[which(df$users == customer_pairs[i,2]),], formula = users~movies, value.var = "ratings")
+  u1_i = u1_i[,-1]; u2_i = u2_i[,-1]; #
+  (items_common = intersect(names(u1_i),names(u2_i)))
+
+  if(length(items_common) != 0){
+    
+    u1_i = u1_i[,items_common]; u2_i = u2_i[,items_common]
+    u1_i_mu = mean(as.numeric(u1_i)); #print(u1_i_mu)
+    u2_i_mu = mean(as.numeric(u2_i)); #print(u2_i_mu)
+    u1_i = u1_i - u1_i_mu; u2_i = u2_i - u2_i_mu
+    
+    cor = sum((u1_i) * (u2_i))/(sqrt(sum(u1_i^2))*sqrt(sum(u2_i^2)))
+
+    return(cor)
+  }else(return(NULL))
+
+} 
