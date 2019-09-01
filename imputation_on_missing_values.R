@@ -14,7 +14,6 @@ cor(ratings_matrix, use = 'pairwise.complete.obs')
 
 ### A Variety of Basic Imputation Techniques 
 
-
 # Replace NA with 0 
 ratings_matrix_zero_impute = ratings_matrix
 ratings_matrix_zero_impute[is.na(ratings_matrix_zero_impute)] = 0

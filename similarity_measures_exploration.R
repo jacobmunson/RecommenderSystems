@@ -50,6 +50,8 @@ cor(y_u, y_v) # 0.2793721
 y_u = y_u - mean(y_u)
 y_v = y_v - mean(y_v)
 pc = (((y_u-mu_yu) %*% (y_v-mu_yv)))/sqrt(sum((y_u-mu_yu)^2) %*% sum((y_v-mu_yv)^2)) # 0.6324555
+cor(y_u,y_v)
+pc
 pc == cs # TRUE, that is: 0.6324555 = 0.6324555
 # Mean-centering rows of vector makes CS = PC (but only if no missing values in vectors)
 # This is important as to to how PC is defined 
@@ -68,9 +70,13 @@ cor(c(1,2,2,2),c(1,3,2,0)) # Forcing NA -> 0, PC = 0.258 (not the same as exclud
 cor(x1,x2, use = "na.or.complete") # Only looking at co-rated items, PC = 0.866
 
 # Takeaway: 
-## PC is the same as CS if vectors are normalized prior to PC AND no missing values (i.e. same set of items rated)
+## PC is the same as CS if vectors are user-centered prior to PC AND no missing values (i.e. same set of items rated)
 ## If we have missing values and exclude those observations for the appropriate user then that is different than imputing a 0
 
+
+
+### LiRa Similarity ###
+# 
 
 df_test = data.frame(x1,x2)
 

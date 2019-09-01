@@ -13,3 +13,13 @@ cosine_similarity = function(matrix){
   cos_sim = cos_sim %*% t(cos_sim)
   return(cos_sim)
 }
+
+sparsity = function(matrix){
+  sparsity = length(which(matrix == 0))/(nrow(matrix)*ncol(matrix))
+  return(sparsity)
+}
+
+mean_center_matrix <- function(D){
+  apply(X = D, MARGIN = 1, FUN = function(row){row - mean(row)})
+}
+

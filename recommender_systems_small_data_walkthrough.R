@@ -16,7 +16,7 @@ coraters = as.matrix(ratings_matrix) %*% as.matrix(t(ratings_matrix))
 
 coraters[coraters > 0] = 1 # reassigning positives to unity - this will operate as a indicator 
 
-coraters = ratings_matrix %*% t(ratings_matrix) # these have to be matrices
+#coraters = ratings_matrix %*% t(ratings_matrix) # these have to be matrices
 coraters[coraters > 0] = 1 # reassigning positives to unity
 
 isSymmetric(coraters) # sanity check
@@ -54,7 +54,7 @@ cosine_similarity = function(matrix){
 #apply(ratings_matrix[which(coraters == 1),], MARGIN = 1, FUN = cosine_similarity())
 #apply(ratings_matrix, MARGIN = c(1,2), FUN = cosine_similarity())
 
-<<<<<<< HEAD
+
 # Users that have co-rated items (on a per-user basis)
 user_ratings = apply(coraters, MARGIN = 1, FUN = function(x)(which(x == 1)))
 user_ratings$`1`
@@ -64,23 +64,23 @@ corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]}
 
 corated_vectors
 
-sapply(corated_vectors, FUN = function(x){nrow(x)*ncol(x)})
+#sapply(corated_vectors, FUN = function(x){nrow(x)*ncol(x)})
 
 
 
 cat(sum(sapply(corated_vectors, FUN = function(x){nrow(x)*ncol(x)})), 
     "elements to evaluate out of", 
     nrow(ratings_matrix)*ncol(ratings_matrix),"total elements") 
+Sys.sleep(1)
 # for small datasets this is redundant, but becomes advantageous with large sparse matrices
 
-=======
-user_ratings = apply(coraters, MARGIN = 1, FUN = function(x)(unique(which(x == 1))))
+#user_ratings = apply(coraters, MARGIN = 1, FUN = function(x)(unique(which(x == 1))))
 
 
 corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]})
 corated_vectors$`1`[1:10,1:16]
 #corated_vectors = sapply(X = user_ratings, FUN = function(x){ratings_matrix[x,]})
->>>>>>> b056c202b63ebe65078d57db4526306292990981
+
 
 # Cosine Similarity
 # check in RS Textbook, but usually on all users (not just those co-rating user, but non-corating users just go to 0 anyways)
@@ -91,9 +91,14 @@ user_cosine_similarity = lapply(corated_vectors, FUN = cosine_similarity)
 
 user_cosine_similarity$`2`[1:15,1:10]
 
-test_ps = cor(ratings_matrix)
+lapply(corated_vectors, FUN = dim)
+
+
+test_ps = cor(t(ratings_matrix))
 test_cs = cosine_similarity(matrix = ratings_matrix)
 test_ps[1:5,1:13]
+
+dim(test_ps); dim(test_cs)
 
 ### Pearson Similarity  
 # this isn't correct - should be as-in LiRa paper (also RS Textbook)
