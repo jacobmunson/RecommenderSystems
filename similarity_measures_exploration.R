@@ -79,11 +79,54 @@ cor(x1,x2, use = "na.or.complete") # Only looking at co-rated items, PC = 0.866
 # LiRa = log10(A/B)
 # A = prob(diff{x_u,x_v} | same cluster)
 # B = prob(diff{x_u,x_v} | pure chance)
+# A,B are given as lira_bottom,lira_top in following function
 
-lira = log10()
+lira = function(x_u, x_v, num_ratings){
+  num_diff = length(which(!is.na(abs(x_u - x_v))))
+  lira_bottom = (1/num_ratings)^num_diff
+  lira_top = 0.5^(num_diff)
+  lira = log10(lira_top/lira_bottom)
+  return(lira)
+}
 
-df_test = data.frame(x1,x2)
+# Assumptions
+# d = number of ratings
+d = 5 # scores 1,2,3,4,5
 
-cor(df_test, use = "na.or.complete")
 
+# Data Points 
+# (Nearly) Same vectors, but with missing values instead of 0s
+y_u = c(1,1,0,0,0,5); y_u[y_u == 0] = NA
+y_v = c(2,1,3,0,0,2); y_v[y_v == 0] = NA
+lira(x_u = y_u, x_v = y_v, num_ratings = d) # 1.19382
+
+# Example set 1 from paper
+y_u = c(1,1,0,0,0,2); y_u[y_u == 0] = NA
+y_v = c(1,1,0,0,0,2); y_v[y_v == 0] = NA
+lira(x_u = y_u, x_v = y_v, num_ratings = d) # 1.19381
+cor(x = y_u, y = y_v, use = "pairwise.complete.obs") # 1 (perfect "match")
+
+# Example set 2 from paper
+y_u = c(1,1,5,4,4,2); y_u[y_u == 0] = NA
+y_v = c(1,1,5,4,4,2); y_v[y_v == 0] = NA
+lira(x_u = y_u, x_v = y_v, num_ratings = d) # 2.38764
+cor(x = y_u, y = y_v, use = "pairwise.complete.obs") # 1 (perfect "match" still - but literally twice as much observed data)
+
+# Additional example sets
+# What happens as vector length increases?
+
+y_u = c(1,1,5,4,0,0,0); y_u[y_u == 0] = NA
+y_v = c(1,1,5,5,0,0,1); y_v[y_v == 0] = NA
+lira(x_u = y_u, x_v = y_v, num_ratings = d) # 1.59
+cor(x = y_u, y = y_v, use = "pairwise.complete.obs") # 0.98 
+
+y_u = c(1,1,5,4,0,0,3); y_u[y_u == 0] = NA
+y_v = c(1,1,5,5,0,0,1); y_v[y_v == 0] = NA
+lira(x_u = y_u, x_v = y_v, num_ratings = d) # 1.98
+cor(x = y_u, y = y_v, use = "pairwise.complete.obs") # 0.86
+
+y_u = c(1,1,5,4,0,0,3,0,5,0); y_u[y_u == 0] = NA
+y_v = c(1,1,5,5,0,0,1,1,3,1); y_v[y_v == 0] = NA
+lira(x_u = y_u, x_v = y_v, num_ratings = d) # 2.38
+cor(x = y_u, y = y_v, use = "pairwise.complete.obs") # 0.79
 

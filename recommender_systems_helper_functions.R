@@ -23,3 +23,10 @@ mean_center_matrix <- function(D){
   apply(X = D, MARGIN = 1, FUN = function(row){row - mean(row)})
 }
 
+lira = function(x_u, x_v, num_ratings){
+  num_diff = length(which(!is.na(abs(x_u - x_v))))
+  lira_bottom = (1/num_ratings)^num_diff
+  lira_top = 0.5^(num_diff)
+  lira = log10(lira_top/lira_bottom)
+  return(lira)
+}
