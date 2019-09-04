@@ -20,7 +20,7 @@ sparsity = function(matrix){
 }
 
 mean_center_matrix <- function(D){
-  apply(X = D, MARGIN = 1, FUN = function(row){row - mean(row)})
+  apply(X = D, MARGIN = 1, FUN = function(row){row - mean(row, na.rm = TRUE)})
 }
 
 lira = function(x_u, x_v, num_ratings){
