@@ -282,19 +282,23 @@ normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x))) }
                     
                     
-                    
-                    
-                    
-                    customer_pairs = t(combn(unique(df$users), m = 2))
+df = D
+customer_pairs = t(combn(unique(df$userId), m = 2))
 #customer_pairs = expand.grid(unique(df$users),unique(df$users))
 #customer_pairs = customer_pairs[customer_pairs$Var1 != customer_pairs$Var2,]
-A = sapply(1:nrow(customer_pairs), FUN = pairwise_similarities) # sapply worked
-cbind(customer_pairs,unlist(A))
+start = Sys.time()
+PC = sapply(1:nrow(customer_pairs), FUN = pairwise_similarities) # sapply worked
+end = Sys.time()
+print(end - start)
+sim = unlist(PC)
+length(sim)
+nrow(customer_pairs)
+cbind(customer_pairs,PC)
 
 pairwise_similarities = function(i){
-  #i = 4
-  u1_i = dcast(data = df[which(df$users == customer_pairs[i,1]),], formula = users~movies, value.var = "ratings")
-  u2_i = dcast(data = df[which(df$users == customer_pairs[i,2]),], formula = users~movies, value.var = "ratings")
+  #print(i)
+  u1_i = dcast(data = df[which(df$userId == customer_pairs[i,1]),], formula = userId~movieId, value.var = "rating")
+  u2_i = dcast(data = df[which(df$userId == customer_pairs[i,2]),], formula = userId~movieId, value.var = "rating")
   u1_i = u1_i[,-1]; u2_i = u2_i[,-1]; #
   (items_common = intersect(names(u1_i),names(u2_i)))
 
@@ -311,3 +315,10 @@ pairwise_similarities = function(i){
   }else(return(NULL))
 
 } 
+
+
+# 30 minutes for 100,000 ratings dataset - 610 users, 9724 films
+
+
+
+

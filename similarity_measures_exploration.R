@@ -76,7 +76,11 @@ cor(x1,x2, use = "na.or.complete") # Only looking at co-rated items, PC = 0.866
 
 
 ### LiRa Similarity ###
-# 
+# LiRa = log10(A/B)
+# A = prob(diff{x_u,x_v} | same cluster)
+# B = prob(diff{x_u,x_v} | pure chance)
+
+lira = log10()
 
 df_test = data.frame(x1,x2)
 
