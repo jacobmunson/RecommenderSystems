@@ -7,6 +7,9 @@ https://cran.r-project.org/web/packages/mice/mice.pdf
 
 http://r-statistics.co/Missing-Value-Treatment-With-R.html
 
+https://www.omicsonline.org/open-access/a-comparison-of-six-methods-for-missing-data-imputation-2155-6180-1000224.php?aid=54590
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3074241/
 
 ## Synthetic Data:
 
