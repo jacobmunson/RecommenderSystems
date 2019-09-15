@@ -17,7 +17,8 @@ x_7 = c(2,2,1,3,4,1,6)
 x_8 = c(3,NA,NA,4,0,2,5)
 x_9 = c(1,2,NA,3,3,4,2)
 x_10 = c(5,5,5,5,5,2,2)
-user_df = rbind(x_1,x_2,x_3,x_4,x_5,x_6,x_7,x_8,x_9,x_10)
+x_11 = c(5,5,5,5,5,2,2)
+user_df = rbind(x_1,x_2,x_3,x_4,x_5,x_6,x_7,x_8,x_9,x_10,x_11)
 
 #var(c(x_1,x_2,x_3,x_4), na.rm = TRUE);var(c(c(x_1,x_2,x_3,x_4),-c(x_1,x_2,x_3,x_4)), na.rm = TRUE)
 
@@ -44,6 +45,7 @@ plot(density(rnorm(n = 100000, mean = mu_pop, sd = sd_pop)), ylim = c(0,1))
 # 7,1 is interesting
 random_users = sample(1:nrow(user_df), size = 2, replace = FALSE)
 x_u = user_df[random_users[1],]; x_v = user_df[random_users[2],]
+x_u = user_df[10,]; x_v = user_df[11,]; 
 (diff = x_u - x_v)
 var(diff, na.rm = TRUE)
 
