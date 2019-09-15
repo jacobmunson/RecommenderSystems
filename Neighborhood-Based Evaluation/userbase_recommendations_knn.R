@@ -1,7 +1,17 @@
+#################################
+### User Base Recommendations ###
+#################################
+# For all items that a user has NA, going to predict a rating
+# Obviously this is far more computationally expensive (nevermind inefficient) than just "get topN" recommendations
+# The point here is that I want to do a lot of post-recommendation analysis
+# Also, will likely make this run in parallel in future iterations. 
+
+# 100k MovieLense dataset
 library(readr)
 D <- read.csv("C:/Users/Jacob/Downloads/ml-latest-small/ml-latest-small/ratings.csv")
 head(D)
 
+# Matrix format
 library(reshape2)
 R = dcast(D, userId~movieId, value.var = "rating", na.rm=FALSE)
 R[1:15,1:15]
@@ -12,11 +22,12 @@ R = R[,-1]
 R[1:15,1:15]
 dim(R)
 
+# Similarity Measure - using Pearson
 R_pc = cor(t(R), use = "pairwise.complete.obs")
 dim(R_pc)
 R_pc[1:15,1:5]
 
-# For all items that a user has NA, going to predict a rating
+# Build Recommendations
 cbr_recommendations = c()
 
 start = Sys.time()
@@ -24,10 +35,10 @@ for(j in 1:length(unique(user_list))){
   user = j
     
   items_to_rate = which(is.na(R[user,]))
-  customer_prediction = matrix(data = 0, nrow = length(items_to_rate), ncol = 2)
+  customer_prediction = matrix(data = 0, nrow = length(items_to_rate), ncol = 3)
   customer_prediction[,1] = user
   rownames(customer_prediction) = seq(1, length(items_to_rate), 1)
-  colnames(customer_prediction) = c("userId","movieId")
+  colnames(customer_prediction) = c("userId","rating","movieId")
   
   for(i in 1:length(items_to_rate)){
     
@@ -42,29 +53,60 @@ for(j in 1:length(unique(user_list))){
     if(length(nn) > topN){
       nn = sort(nn, decreasing = TRUE)[2:(topN+1)]
     }else{nn = sort(nn, decreasing = TRUE)}
-
+    nn = nn[which(nn > 0)] # added since ratings can get drastically inflated by a nearest neighbor being negatively correlated
+    
     # Predicted Rating for Item 1 by User 3
     r = sum((R[names(nn),item] * nn))/sum(nn) # rating for user1 on item 1 
     customer_prediction[i,2] = r
-
+    customer_prediction[i,3] = item
+    
   }
   
-  customer_prediction = customer_prediction[-which(is.nan(customer_prediction[,"movieId"])),]
+  customer_prediction = customer_prediction[-which(is.nan(customer_prediction[,"rating"])),]
   cbr_recommendations = rbind(cbr_recommendations, customer_prediction)
   cat("user", j, "completed...","\n")
   
 }
 end = Sys.time()
-end - start # 37.37 minutes for 610 users
-dim(cbr_recommendations) # 1341976 total recommendations
+end - start # 38.12 minutes for 610 users
+dim(cbr_recommendations) # 1341976 total recommendations -> down to 1251797 after ** adjustment
 length(unique(cbr_recommendations[,"userId"])) # 609/610 users received recommendations 
 
+# Some Post-Recommendation Analysis
 library(dplyr)
 cbr_recommendations = as_tibble(cbr_recommendations)
 cbr_recommendations %>% group_by(userId) %>% 
   summarize(NumRec = n()) %>% summarize(max(NumRec), min(NumRec), mean(NumRec), sd(NumRec), median(NumRec))
-# Most Recommendations: 5174 (i.e. at least one user got 5174 recommendations)
-# Minimum Recommendations: 5
-# Mean Recommendations: 2204
-# Mediam Recommendations: 2236
-# Recommendations SD: 1293 
+# Most Recommendations: 5174 -> 4901 (i.e. at least one user got 5174 recommendations)
+# Minimum Recommendations: 5 -> 5
+# Mean Recommendations: 2204 -> 2055
+# Mediam Recommendations: 2236 -> 2136
+# Recommendations sd: 1293  -> 1165
+## values following "->" are after ** adjustment
+
+# If we want to give TopN Recommendations for a single user
+head(cbr_recommendations)
+N = 5
+cbr_recommendations %>% group_by(userId) %>% arrange(desc(rating)) %>% top_n(n = N) %>% filter(userId == 386)
+# noticeable early on, some people have *very* large recommendation ratings
+# for example, user 386 on item 9691 has a rating prediction of 196 -> going to dig deeper on this
+# follow-up: the two "closest" users to user 386 are 417 (pc = 0.4308202) & 338 (pc = -0.4264014)
+# this making the sum that get divided by 0.004418786, thus inflating the rating drastically
+# solution: restrict nearest neighbors to those with positive values (nn = nn[which(nn > 0)]) (hereby: "** adjustment")
+## after ** adjustment, user 386 on item 9691 has a rating of 3!!! Much better. 
+
+# Some Evaluation Measures - Recommender Systems Textbook (pg. 231)
+
+### Coverage Metric
+## Two varieties
+## User-Space Coverage - fraction of all users such that at least k recommendations per user can be predicted
+## Item-Space Coverage - fraction of all items such that at least k recommendations (to users) per item can be predicted
+# Let's say k=1 is sufficient for our concerns for each Coverage Metric
+## How many movies got recommended? 
+length(unique(cbr_recommendations$movieId)) # 6252
+## How many movies are there in the dataset? 
+length(unique(D$movieId)) # 9724
+# So the Item-Space Coverage is 6252/9724 => 64.3% coverage
+# For the User-Space Coverage, 609/610 => 99.8% coverage
+# It is worth noting that either of these measures can be artificially inflated by sacrificing performance measures (like accuracy)
+# to attain higher coverage by providing seemingly less suitable recommendations (this might also then be in conflict with other measures like Diversity)
