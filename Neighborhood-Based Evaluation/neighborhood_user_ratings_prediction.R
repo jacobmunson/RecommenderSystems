@@ -1,7 +1,7 @@
-##############################################
-### Neighborhood-based Ratings Predictions ###
-# Example from pg.34 of Recommender System Textbook
-###############################################
+#####################################################
+### Neighborhood-based Ratings Predictions ##########
+# Example from pg.34 of Recommender System Textbook # 
+#####################################################
 source('~/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
 
 # Sample data from text 
@@ -74,6 +74,10 @@ item = which(is.na(R[user,]))[item_num] # item choices
 r36 = mu[user] + sum((R[names(nn),item] * nn))/sum(nn)  # rating for user3 on item 6 
 r36 # 0.86
 
+# Let's look at rating prediction for items 1,6 w/ and w/o mean centering
+# No mean centering: Item1 6.479, Item2 4
+# With mean centering: Item1 3.343, Item2 0.86
+# Substantial difference in each as the top 2 neighbors of user3 are consistently high raters (personal bias)
 
 
 
