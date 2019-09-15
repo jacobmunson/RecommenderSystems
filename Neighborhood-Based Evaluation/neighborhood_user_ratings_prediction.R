@@ -23,19 +23,28 @@ mu = c(mu1,mu2,mu3,mu4,mu5)
 # User-User Correlations
 R_pc = cor(t(R), use = "pairwise.complete.obs")
 R_pc
-user = 3
+user = 1
 R_pc[user,]
+
+# Select Item for Prediction - this is important for larger datasets
+item_num = 1
+item = which(is.na(R[user,]))[item_num] # item choices
+possible_users = names(R[,item][which(!is.na(R[,item]))]) # people who have actually rated the item of interest
 
 # Selecting Most Correlated Users
 topN = 2 # looking at two most closely correlated users
-nn = sort(R_pc[user,], decreasing = TRUE)[2:(topN+1)]
+nn = R_pc[user,]
+nn = nn[intersect(names(nn), possible_users)]
+nn = sort(nn, decreasing = TRUE)[2:(topN+1)]
 nn
 
 # Predicted Rating for Item 1 by User 3
-item_num = 1
-item = which(is.na(R[user,]))[item_num] # item choices
 r31 = sum((R[names(nn),item] * nn))/sum(nn) # rating for user3 on item 1 
 r31 # 6.479
+item_num = 2
+item = which(is.na(R[user,]))[item_num] # item choices
+r36 = sum((R[names(nn),item] * nn))/sum(nn)  # rating for user3 on item 6 
+r36 # 4
 
 
 # Mean Centered Approach
@@ -60,6 +69,10 @@ item_num = 1
 item = which(is.na(R[user,]))[item_num] # item choices
 r31 = mu[user] + sum((R[names(nn),item] * nn))/sum(nn)  # rating for user3 on item 1 
 r31 # 3.343
+item_num = 2
+item = which(is.na(R[user,]))[item_num] # item choices
+r36 = mu[user] + sum((R[names(nn),item] * nn))/sum(nn)  # rating for user3 on item 6 
+r36 # 0.86
 
 
 
