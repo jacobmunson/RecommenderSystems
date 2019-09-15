@@ -16,15 +16,7 @@ R_pc = cor(t(R), use = "pairwise.complete.obs")
 dim(R_pc)
 R_pc[1:15,1:5]
 
-user = 1
-R_pc[user,1:5]
-
-# Select Item for Prediction - this is important for larger datasets
-
-
-
-#customer_item_recommendations = function(i){}
-
+# For all items that a user has NA, going to predict a rating
 cbr_recommendations = c()
 
 start = Sys.time()
@@ -39,7 +31,6 @@ for(j in 1:length(unique(user_list))){
   
   for(i in 1:length(items_to_rate)){
     
-    #i = 100#95
     item = which(is.na(R[user,]))[i] #[item_num] # item choices
     possible_users = names(R[,item][which(!is.na(R[,item]))]) # people who have actually rated the item of interest
     
@@ -51,15 +42,11 @@ for(j in 1:length(unique(user_list))){
     if(length(nn) > topN){
       nn = sort(nn, decreasing = TRUE)[2:(topN+1)]
     }else{nn = sort(nn, decreasing = TRUE)}
-    #nn
-    
+
     # Predicted Rating for Item 1 by User 3
     r = sum((R[names(nn),item] * nn))/sum(nn) # rating for user1 on item 1 
     customer_prediction[i,2] = r
-    #r # 2.667
-    #item  
-    #print(i)
-    
+
   }
   
   customer_prediction = customer_prediction[-which(is.nan(customer_prediction[,"movieId"])),]
@@ -68,10 +55,16 @@ for(j in 1:length(unique(user_list))){
   
 }
 end = Sys.time()
-end - start
+end - start # 37.37 minutes for 610 users
+dim(cbr_recommendations) # 1341976 total recommendations
+length(unique(cbr_recommendations[,"userId"])) # 609/610 users received recommendations 
 
-dim(cbr_recommendations) # 240
-length(unique(cbr_recommendations[,"userId"]))
-
-
-lapply()
+library(dplyr)
+cbr_recommendations = as_tibble(cbr_recommendations)
+cbr_recommendations %>% group_by(userId) %>% 
+  summarize(NumRec = n()) %>% summarize(max(NumRec), min(NumRec), mean(NumRec), sd(NumRec), median(NumRec))
+# Most Recommendations: 5174 (i.e. at least one user got 5174 recommendations)
+# Minimum Recommendations: 5
+# Mean Recommendations: 2204
+# Mediam Recommendations: 2236
+# Recommendations SD: 1293 
