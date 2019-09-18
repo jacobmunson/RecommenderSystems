@@ -1,7 +1,7 @@
 ##################################################
 ### Evaluation Metrics for Recommender Systems ###
 ##################################################
-#write.csv(cbr_recommendations, file = "customer_base_recommendations_20m_ml.csv")
+#write.csv(cbr_recommendations, file = "GitHub/RecommenderSystems/Neighborhood-Based Evaluation/customer_base_recommendations_20m_ml.csv")
 #customer_base_recommendations_20m_ml <- read_csv("GitHub/RecommenderSystems/Neighborhood-Based Evaluation/customer_base_recommendations_20m_ml.csv")
 
 

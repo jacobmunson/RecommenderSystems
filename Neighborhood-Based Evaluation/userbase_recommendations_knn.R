@@ -9,7 +9,10 @@
 # 100k MovieLense dataset
 library(readr)
 D <- read.csv("C:/Users/Jacob/Downloads/ml-latest-small/ml-latest-small/ratings.csv")
-head(D)
+head(D); dim(D)
+D %>% group_by(userId) %>% 
+  summarize(NumRec = n()) %>% summarize(max(NumRec), min(NumRec), mean(NumRec), sd(NumRec), median(NumRec))
+
 
 # Matrix format
 library(reshape2)
@@ -24,32 +27,49 @@ dim(R)
 
 # Similarity Measure - using Pearson
 R_pc = cor(t(R), use = "pairwise.complete.obs")
+R[is.na(R)] = 0
+R_pc = cosine_similarity(matrix = R)
 dim(R_pc)
 R_pc[1:15,1:5]
 
 # Build Recommendations
 cbr_recommendations = c()
+new_ratings = TRUE # toggle for produced prediction evaluation vs providing recommendations
 
 start = Sys.time()
 for(j in 1:length(unique(user_list))){
   user = j
-    
-  items_to_rate = which(is.na(R[user,]))
+  
+  if(new_ratings){
+    items_to_rate = which(is.na(R[user,]))
+  }else{
+    items_to_rate = which(!is.na(R[user,]))    
+  }
+
   customer_prediction = matrix(data = 0, nrow = length(items_to_rate), ncol = 3)
   customer_prediction[,1] = user
   rownames(customer_prediction) = seq(1, length(items_to_rate), 1)
   colnames(customer_prediction) = c("userId","rating","movieId")
   
   for(i in 1:length(items_to_rate)){
+    #i = 1
     
-    item = which(is.na(R[user,]))[i] #[item_num] # item choices
+    if(new_ratings){
+      item = which(is.na(R[user,]))[i] #[item_num] # item choices
+    }else{
+      item = which(!is.na(R[user,]))[i] #[item_num] # item choices
+    }
+    
     possible_users = names(R[,item][which(!is.na(R[,item]))]) # people who have actually rated the item of interest
     
     # Selecting Most Correlated Users
     topN = 2 # looking at two most closely correlated users
     nn = R_pc[user,]
     nn = nn[intersect(names(nn), possible_users)]
-    nn = nn[-which(is.na(nn))]
+    
+    
+    if(length(which(is.na(nn))) > 0){nn = nn[-which(is.na(nn))]}
+    
     if(length(nn) > topN){
       nn = sort(nn, decreasing = TRUE)[2:(topN+1)]
     }else{nn = sort(nn, decreasing = TRUE)}
@@ -62,7 +82,7 @@ for(j in 1:length(unique(user_list))){
     
   }
   
-  customer_prediction = customer_prediction[-which(is.nan(customer_prediction[,"rating"])),]
+  #customer_prediction = customer_prediction[-which(is.nan(customer_prediction[,"rating"])),]
   cbr_recommendations = rbind(cbr_recommendations, customer_prediction)
   cat("user", j, "completed...","\n")
   
@@ -87,7 +107,7 @@ cbr_recommendations %>% group_by(userId) %>%
 # If we want to give TopN Recommendations for a single user
 head(cbr_recommendations)
 N = 10
-cbr_topN_recommendation = cbr_recommendations %>% group_by(userId) %>% arrange(desc(rating)) %>% top_n(n = N) #%>% filter(userId == 386)
+cbr_topN_recommendation = cbr_recommendations %>% group_by(userId) %>% arrange(desc(rating)) %>% top_n(n = N) 
 # noticeable early on, some people have *very* large recommendation ratings
 # for example, user 386 on item 9691 has a rating prediction of 196 -> going to dig deeper on this
 # follow-up: the two "closest" users to user 386 are 417 (pc = 0.4308202) & 338 (pc = -0.4264014)
@@ -111,3 +131,6 @@ length(unique(D$movieId)) # 9724
 # For the User-Space Coverage, 609/610 => 99.8% coverage
 # It is worth noting that either of these measures can be artificially inflated by sacrificing performance measures (like accuracy)
 # to attain higher coverage by providing seemingly less suitable recommendations (this might also then be in conflict with other measures like Diversity)
+
+ratings_comparison = merge(D, cbr_recommendations, by = c("userId","movieId"))
+mean(abs(ratings_comparison$rating.x - ratings_comparison$rating.y), na.rm = TRUE)
