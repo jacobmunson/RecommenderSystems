@@ -86,8 +86,8 @@ cbr_recommendations %>% group_by(userId) %>%
 
 # If we want to give TopN Recommendations for a single user
 head(cbr_recommendations)
-N = 5
-cbr_recommendations %>% group_by(userId) %>% arrange(desc(rating)) %>% top_n(n = N) %>% filter(userId == 386)
+N = 10
+cbr_topN_recommendation = cbr_recommendations %>% group_by(userId) %>% arrange(desc(rating)) %>% top_n(n = N) #%>% filter(userId == 386)
 # noticeable early on, some people have *very* large recommendation ratings
 # for example, user 386 on item 9691 has a rating prediction of 196 -> going to dig deeper on this
 # follow-up: the two "closest" users to user 386 are 417 (pc = 0.4308202) & 338 (pc = -0.4264014)
@@ -103,6 +103,7 @@ cbr_recommendations %>% group_by(userId) %>% arrange(desc(rating)) %>% top_n(n =
 ## Item-Space Coverage - fraction of all items such that at least k recommendations (to users) per item can be predicted
 # Let's say k=1 is sufficient for our concerns for each Coverage Metric
 ## How many movies got recommended? 
+length(unique(cbr_topN_recommendation$movieId)) # 6252
 length(unique(cbr_recommendations$movieId)) # 6252
 ## How many movies are there in the dataset? 
 length(unique(D$movieId)) # 9724
