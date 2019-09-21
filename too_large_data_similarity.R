@@ -15,7 +15,7 @@ dim(D)
 #id = sample(x = seq(1,nrow(D),1), size = 50000, replace = FALSE) #33098 - 50000 /  91924 - 100000
 #D = D[id,]
 #D
-
+str(D)
 head(D)
 length(unique(D$user)) # 138493 users 
 
@@ -25,29 +25,37 @@ cat("Start Time:", format(Sys.time(), "%a %b %d %X %Y"))
 C = data.frame(user1 = 0, user2 = 0)
 coraters_total = c()
 
+start = Sys.time()
 for(i in 1:length(unique(D$user))){
-  #i = 1
+  #i = 2
   items = D[which(D$user == unique(D$user)[i]),"item"]
   coraters_total = c()
-  for(j in 1:length(unique(items$item))){
+  for(j in 1:length(unique(items))){
     #print(j)
-    #j = 2
-    coraters = D[which(D$item == items$item[j]),"user"]
-    coraters_total = c(coraters_total, coraters$user)
+    #j = 1
+    coraters = D[which(D$item == items[j]),"user"]
+    coraters_total = c(coraters_total, coraters)
   }
   coraters_total = unique(coraters_total)
+  
+  if(length(coraters_total < unique(D$user)[i]) > 0){
+    coraters_total = coraters_total[-which(coraters_total <= unique(D$user)[i])]
+  }
+
   C1 = expand.grid(unique(D$user)[i],coraters_total)
   colnames(C1) = c("user1","user2")
   
-  C1_rev = C1[which(C1[,1] == i),c(2:1)]
-  colnames(C1_rev) = c("user1","user2")
+  #C1_rev = C1[which(C1[,1] == i),c(2:1)]
+  #colnames(C1_rev) = c("user1","user2")
   
-  C = anti_join(C, C1_rev, by = c("user1","user2"))
+  #C = anti_join(C, C1_rev, by = c("user1","user2"))
   C = rbind(C,C1)
   cat("User:",i,"/",length(unique(D$user)), "|",
       "Comparisons:",dim(C1)[1],
       "Total Comparisons:",nrow(C),"\n")
 }
+end = Sys.time()
+end - start
 
 if(length(which(C[,1] == C[,2])) > 0){
   C = C[-which(C[,1] == C[,2]),] # only run once
@@ -111,5 +119,3 @@ V[1:10,1:10]
 V[lower.tri(V, diag = TRUE)] = 0
 V[V > 0] = 1
 sum(V)
-
-

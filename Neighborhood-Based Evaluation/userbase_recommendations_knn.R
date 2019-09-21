@@ -27,14 +27,16 @@ dim(R)
 
 # Similarity Measure - using Pearson
 R_pc = cor(t(R), use = "pairwise.complete.obs")
-R[is.na(R)] = 0
-R_pc = cosine_similarity(matrix = R)
+
+R_temp = R
+R_temp[is.na(R_temp)] = 0
+R_pc = cosine_similarity(matrix = R_temp)
 dim(R_pc)
 R_pc[1:15,1:5]
 
 # Build Recommendations
 cbr_recommendations = c()
-new_ratings = TRUE # toggle for produced prediction evaluation vs providing recommendations
+new_ratings = FALSE # toggle for produced prediction evaluation vs providing recommendations
 
 start = Sys.time()
 for(j in 1:length(unique(user_list))){

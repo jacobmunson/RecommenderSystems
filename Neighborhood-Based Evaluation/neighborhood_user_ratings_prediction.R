@@ -19,16 +19,17 @@ mu3 = mean(u3, na.rm = TRUE)
 mu4 = mean(u4, na.rm = TRUE)
 mu5 = mean(u5, na.rm = TRUE)
 mu = c(mu1,mu2,mu3,mu4,mu5)
+mu
 
 # User-User Correlations
 R_pc = cor(t(R), use = "pairwise.complete.obs")
 R_pc
-user = 1
+user = 3
 R_pc[user,]
 
 # Select Item for Prediction - this is important for larger datasets
 item_num = 1
-item = which(is.na(R[user,]))[item_num] # item choices
+item = which(!is.na(R[user,]))[item_num] # item choices
 possible_users = names(R[,item][which(!is.na(R[,item]))]) # people who have actually rated the item of interest
 
 # Selecting Most Correlated Users
@@ -78,9 +79,4 @@ r36 # 0.86
 # No mean centering: Item1 6.479, Item2 4
 # With mean centering: Item1 3.343, Item2 0.86
 # Substantial difference in each as the top 2 neighbors of user3 are consistently high raters (personal bias)
-
-
-
-
-
 
