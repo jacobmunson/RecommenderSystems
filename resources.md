@@ -24,3 +24,7 @@ https://grouplens.org/datasets/movielens/
 https://webscope.sandbox.yahoo.com/catalog.php?datatype=r&guccounter=1
 
 https://www.kdnuggets.com/2016/02/nine-datasets-investigating-recommender-systems.html
+
+## Big Data Methods :
+
+https://arxiv.org/abs/1604.06414
