@@ -14,3 +14,6 @@ This folder is for tracking runtimes of certain evaluations
     - Early evaluations demonstrate much better management of memory and 1-3x better runtime
         - Update: With 15% 20M ML, memory is laggy, probably try more fine shards and gc() at each end
     - "bigmemory" R package tested, keeps dataset on disk, much more efficient RAM-wise, but several times slower in my practice
+    - My suspicion is that there's a sweetspot between running the task parallel on all user vs. "sharding" vs. number of cores
+        - All users (in earlier runs) was good for RAM, but the CPU became the bottleneck, and runtime was much longer than larger chunks
+ 
