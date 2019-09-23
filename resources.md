@@ -1,3 +1,6 @@
+## Similarity:
+
+https://nikaashpuri.wordpress.com/2016/03/09/llr-log-likelihood-ratio-used-for-recommendations/
 
 ## Imputation:
 
@@ -17,6 +20,8 @@ http://delivery.acm.org/10.1145/3250000/3240325/p548-slokom.pdf?ip=153.90.84.8&i
 
 https://arxiv.org/abs/1410.6714
 
+https://ieeexplore.ieee.org/document/7796926
+
 ## Real Data:
 
 https://grouplens.org/datasets/movielens/
@@ -24,6 +29,8 @@ https://grouplens.org/datasets/movielens/
 https://webscope.sandbox.yahoo.com/catalog.php?datatype=r&guccounter=1
 
 https://www.kdnuggets.com/2016/02/nine-datasets-investigating-recommender-systems.html
+
+https://gab41.lab41.org/the-nine-must-have-datasets-for-investigating-recommender-systems-ce9421bf981c#.abs1ftta9
 
 ## Big Data Methods :
 
