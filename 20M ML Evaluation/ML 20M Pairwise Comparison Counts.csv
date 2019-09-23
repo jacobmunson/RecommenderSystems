@@ -9,3 +9,4 @@ Dataset,Percent of Dataset Used,Cores,Runtime,Number Unique Comparisons,Method,V
 20M ML,15%,6,>7.4hr,killed,shards,1
 100k ML,100%,5,13.14sec,"164,054",shards,2
 20M ML,1%,5,45.98sec,"830,951",shards,2
+20M ML,5%,5,21.11min,"20,027,983",shards,2
