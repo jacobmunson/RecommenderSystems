@@ -1,13 +1,14 @@
-Dataset,Percent of Dataset Used,Cores,Runtime,Number Unique Comparisons,Method,Version
-20M ML,1%,5,~3min,~800k,shards,1
-20M ML,5%,5,1.04hr,"20,027,983",shards,1
-20M ML,7%,5,2.28hr,"39,703,894",shards,1
-20M ML,7%,6,1.8hr,"39,703,894",shards,1
-20M ML,7%,6,6.82hr,"39,703,894",user,1
-20M ML,10%,6,2.43hr,"80,989,018",shards,1
-20M ML,15%,6,Xhr,crashed,shards,1
-20M ML,15%,6,>7.4hr,killed,shards,1
-100k ML,100%,5,13.14sec,"164,054",shards,2
-20M ML,1%,5,45.98sec,"830,951",shards,2
-20M ML,5%,5,21.11min,"20,027,983",shards,2
-20M ML,10%,5,1.79hr,"80,989,018",shards,2
+Dataset,Percent of Dataset Used,Cores,Runtime,Number Unique Comparisons,Method,Version,Notes
+20M ML,1%,5,~3min,~800k,shards,1,none
+20M ML,5%,5,1.04hr,"20,027,983",shards,1,none
+20M ML,7%,5,2.28hr,"39,703,894",shards,1,none
+20M ML,7%,6,1.8hr,"39,703,894",shards,1,none
+20M ML,7%,6,6.82hr,"39,703,894",user,1,none
+20M ML,10%,6,2.43hr,"80,989,018",shards,1,none
+20M ML,15%,6,Xhr,crashed,shards,1,no feedback
+20M ML,15%,6,>7.4hr,killed,shards,1,manually killed
+100k ML,100%,5,13.14sec,"164,054",shards,2,faster
+20M ML,1%,5,45.98sec,"830,951",shards,2,faster
+20M ML,5%,5,21.11min,"20,027,983",shards,2,3x faster
+20M ML,10%,5,1.79hr,"80,989,018",shards,2,faster with N-1 cores
+100k ML,100%,5,54sec,"164,054",shards,2,bigmemory package (slower)
