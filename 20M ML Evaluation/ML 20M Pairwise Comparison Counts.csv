@@ -12,3 +12,4 @@ Dataset,Percent of Dataset Used,Cores,Runtime,Number Unique Comparisons,Method,V
 20M ML,5%,5,21.11min,"20,027,983",shards,2,3x faster
 20M ML,10%,5,1.79hr,"80,989,018",shards,2,faster with N-1 cores
 100k ML,100%,5,54sec,"164,054",shards,2,bigmemory package (slower)
+20M ML,15%,6,5.93hr,killed,shards,1,manually killed - RAM bottleneck
