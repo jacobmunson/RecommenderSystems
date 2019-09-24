@@ -14,3 +14,4 @@ Dataset,Percent of Dataset Used,Cores,Runtime,Number Unique Comparisons,Method,V
 100k ML,100%,5,54sec,"164,054",shards,2,bigmemory package (slower)
 20M ML,15%,5,5.93hr,killed,shards,2,manually killed - RAM bottleneck
 20M ML,15%,5,Xhr,crashed,shards-10,2,Rstudio crashed - RAM better (?)
+20M ML,15%,5,2.87hr,"181,610,832",shards-25,2,Max Ram - 16GB
