@@ -1,0 +1,17 @@
+Increasing swap space on linux machines
+Increasing swap on Windows is relatively straightforward (not addressed here).
+I've never adjusted swap on OSX, so no perspective on that. 
+
+Credit to:
+https://www.fosslinux.com/1064/how-to-create-or-add-a-swap-partition-in-ubuntu-and-linux-mint.htm
+
+Steps: 
+sudo swapon --show
+df -h
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo swapon --show
+free -h
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
