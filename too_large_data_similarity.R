@@ -62,12 +62,12 @@ if(length(which(C[,1] == C[,2])) > 0){
   dim(C)
   print("")
 }
-
+dim(C)
 
 M_comb = cbind(C, 0)
 colnames(M_comb) = c("User1","User2","Sim")
 dim(C)
-M_comb = M_comb[-which(M_comb[,1] == M_comb[,2]),] # should be able to skip
+#M_comb = M_comb[-which(M_comb[,1] == M_comb[,2]),] # should be able to skip
 head(M_comb, n = 15)
 dim(M_comb)
 library(reshape2)
@@ -77,7 +77,7 @@ for(i in 1:nrow(M_comb)){
   B = dcast(data = A, formula = user~item, value.var = "rating")
   B = B[,-1]
   #cat("i",i,length(intersect(which(!is.na(B[1,])),which(!is.na(B[2,])))), "overlap", "\n")
-  cat("iteration:", i, "/", nrow(M_comb))
+  cat("iteration:", i, "/", nrow(M_comb),"\n")
   B_cor = cor(t(B), use = "pairwise.complete.obs")
   if(is.na(B_cor[1,2])){M_comb[i,3] = NA}else{M_comb[i,3] = B_cor[1,2]}
 }
@@ -119,3 +119,11 @@ V[1:10,1:10]
 V[lower.tri(V, diag = TRUE)] = 0
 V[V > 0] = 1
 sum(V)
+
+
+
+
+
+
+
+
