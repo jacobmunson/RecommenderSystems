@@ -16,4 +16,5 @@ This folder is for tracking runtimes of certain evaluations
     - "bigmemory" R package tested, keeps dataset on disk, much more efficient RAM-wise, but several times slower in my practice
     - My suspicion is that there's a sweetspot between running the task parallel on all user vs. "sharding" vs. number of cores
         - All users (in earlier runs) was good for RAM, but the CPU became the bottleneck, and runtime was much longer than larger chunks
+    - Update: Increased size of swap memory substantially, now consistently performing "well" on 15% of 20M ML dataset
  
