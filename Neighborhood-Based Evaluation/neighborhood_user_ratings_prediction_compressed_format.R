@@ -6,7 +6,7 @@ D <- read.csv("C:/Users/Jacob/Downloads/ml-latest-small/ml-latest-small/ratings.
 colnames(D) = c("user","item","rating","timestamp")
 dim(D)
 #D_total = D
-set.seed(1)
+set.seed(2)
 test = sample(x = seq(1,nrow(D),1), size = 0.2*nrow(D), replace = FALSE) #33098 - 50000 /  91924 - 100000
 
 
@@ -21,50 +21,56 @@ head(D)
 length(unique(D$user)) # 910 users 
 
 
-cat("Start Time:", format(Sys.time(), "%a %b %d %X %Y"))
-C = data.frame(user1 = NULL, user2 = NULL)
-#coraters_total = c()
-
-start = Sys.time()
-for(i in 1:length(unique(D$user))){
-  #i = 2
-  items = D[which(D$user == unique(D$user)[i]),"item"]
-  coraters_total = c()
-  for(j in 1:length(unique(items))){
-    #print(j)
-    #j = 1
-    coraters = D[which(D$item == items[j]),"user"]
-    coraters_total = c(coraters_total, coraters)
+build_comparison_list = function(dataset){
+  
+  cat("Start Time:", format(Sys.time(), "%a %b %d %X %Y"))
+  C = data.frame(user1 = NULL, user2 = NULL)
+  start = Sys.time()
+  for(i in 1:length(unique(dataset$user))){
+    #i = 2
+    items = dataset[which(dataset$user == unique(dataset$user)[i]),"item"]
+    coraters_total = c()
+    for(j in 1:length(unique(items))){
+      #print(j)
+      #j = 1
+      coraters = dataset[which(dataset$item == items[j]),"user"]
+      coraters_total = c(coraters_total, coraters)
+    }
+    coraters_total = unique(coraters_total)
+    
+    if(length(coraters_total < unique(dataset$user)[i]) > 0){
+      coraters_total = coraters_total[-which(coraters_total <= unique(D$user)[i])]
+    }
+    
+    C1 = expand.grid(user1 = unique(D$user)[i], user2 = coraters_total)
+    #colnames(C1) = c("user1","user2")
+    #C1_rev = C1[which(C1[,1] == i),c(2:1)]
+    #colnames(C1_rev) = c("user1","user2")
+    #C = anti_join(C, C1_rev, by = c("user1","user2"))
+    
+    C = rbind(C,C1)
+    cat("User:",i,"/",length(unique(D$user)), "|",
+        "Comparisons:",dim(C1)[1],
+        "Total Comparisons:",nrow(C),"\n")
   }
-  coraters_total = unique(coraters_total)
+  end = Sys.time()
+  print(end - start)
+  return(C)
   
-  if(length(coraters_total < unique(D$user)[i]) > 0){
-    coraters_total = coraters_total[-which(coraters_total <= unique(D$user)[i])]
-  }
-  
-  C1 = expand.grid(unique(D$user)[i],coraters_total)
-  colnames(C1) = c("user1","user2")
-  
-  #C1_rev = C1[which(C1[,1] == i),c(2:1)]
-  #colnames(C1_rev) = c("user1","user2")
-  
-  #C = anti_join(C, C1_rev, by = c("user1","user2"))
-  C = rbind(C,C1)
-  cat("User:",i,"/",length(unique(D$user)), "|",
-      "Comparisons:",dim(C1)[1],
-      "Total Comparisons:",nrow(C),"\n")
 }
-end = Sys.time()
-end - start
 
-if(length(which(C[,1] == C[,2])) > 0){
-  C = C[-which(C[,1] == C[,2]),] # only run once
-  dim(C)
-  print("removed entry")
-}
-dim(C)
+D_similarity = build_comparison_list(dataset = D)
 
-M_comb = cbind(C, 0)
+
+# if(length(which(C[,1] == C[,2])) > 0){
+#   C = C[-which(C[,1] == C[,2]),] # only run once
+#   dim(C)
+#   print("removed entry")
+# }
+# dim(C) # should no longer be necessary
+
+head(M_comb)
+M_comb = cbind(D_similarity, PC = NA)
 M_comb = as.matrix(M_comb)
 colnames(M_comb) = c("User1","User2","PC")
 dim(M_comb)
@@ -74,6 +80,7 @@ dim(M_comb)
 library(reshape2)
 
 ## Filling in Pearson Correlation
+library(reshape2)
 for(i in 1:nrow(M_comb)){
   A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
   B = dcast(data = A, formula = user~item, value.var = "rating")
@@ -181,11 +188,12 @@ sim_msr = "CS"
 sim_msr = "LiRaU"
 sim_msr = "LiRaG"
 
-k = 10
+k = 15
 
 ratings_mae = c()
+
 for(i in 1:nrow(D_test)){ # write this as a "validation" function(k, sim_msr)
-#  i = 223
+  #i = 9211
   user = D_test[i, "user"]
   item = D_test[i, "item"]
   rating = D_test[i,"rating"]
@@ -219,7 +227,7 @@ for(i in 1:nrow(D_test)){ # write this as a "validation" function(k, sim_msr)
       #top_k_users = top_k_users[-which(top_k_users == user)]
       
       #subset(D_train, (D_train$user %in% top_k_users) & (D_train$item %in% item))
-      item #6
+      #item #6
       
       if(length(top_k_users) > 1){
         M_user = cbind(M_user, user = top_k_users)
@@ -280,13 +288,100 @@ mean(ratings_mae_lg, na.rm = TRUE) # 0.754, 0.777
 mean(ratings_mae_pc, na.rm = TRUE) # 0.749, 0.767
 mean(ratings_mae_cs, na.rm = TRUE) # 0.745, 0.761
 mean(ratings_mae_lu, na.rm = TRUE) # 0.767, 0.775
-mean(ratings_mae_lg, na.rm = TRUE) # 0.745,
+mean(ratings_mae_lg, na.rm = TRUE) # 0.745, 0.767
 
 # k = 15
-mean(ratings_mae_pc, na.rm = TRUE) # 0.740,
-mean(ratings_mae_cs, na.rm = TRUE) # 0.739,
-mean(ratings_mae_lu, na.rm = TRUE) # 0.761,
-mean(ratings_mae_lg, na.rm = TRUE) # 0.739,
+mean(ratings_mae_pc, na.rm = TRUE) # 0.740, 0.758
+mean(ratings_mae_cs, na.rm = TRUE) # 0.739, 0.757
+mean(ratings_mae_lu, na.rm = TRUE) # 0.761, 0.767
+mean(ratings_mae_lg, na.rm = TRUE) # 0.739, 0.761
+
+
+
+for(i in 1:nrow(M_comb)){}
+
+pc_function = function(i){
+
+  A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  B = dcast(data = A, formula = user~item, value.var = "rating")
+  B = B[,-1]
+  #cat("i",i,length(intersect(which(!is.na(B[1,])),which(!is.na(B[2,])))), "overlap", "\n")
+  cat("iteration:", i, "/", nrow(M_comb),"\n")
+  B_cor = cor(t(B), use = "pairwise.complete.obs")
+  if(is.na(B_cor[1,2])){M_comb[i,"PC"] = NA}else{M_comb[i,"PC"] = B_cor[1,2]}
+  
+}
+
+vapply(FUN = pc_function, X = 1:nrow(M_comb))
+sapply(X = 1:nrow(M_comb), FUN = pc_function)
+
+
+
+
+
+
+
+diffs = c()
+iter = 5000 #overkill
+for(i in 1:iter){
+  ids = sample(x = unique(D$user), size = 2, replace = FALSE)
+  A = rbind(D[which(D$user == ids[1]),],D[which(D$user == ids[2]),])
+  B = dcast(data = A, formula = user~item, value.var = "rating")
+  B = B[,-1]
+  diffs = c(diffs, unlist(B[1,] - B[2,]))
+}
+(mu_pop = mean(c(diffs), na.rm = TRUE)); (v_pop = var(c(diffs), na.rm = TRUE)); (sd_pop = sd(c(diffs), na.rm = TRUE))
+
+
+
+## Filling in Similarity
+
+M_comb = cbind(D_similarity, PC = NA, CS = NA, LiRaU = NA, LiRaG = NA)
+
+head(M_comb, n = 15)
+
+start = Sys.time()
+for(i in 1:nrow(M_comb)){
+  
+  cat("iteration:", i, "/", nrow(M_comb),"\n")
+  A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  B_fixed = dcast(data = A, formula = user~item, value.var = "rating")
+  B = B_fixed[,-1]
+  B_cor = cor(t(B), use = "pairwise.complete.obs")
+  if(is.na(B_cor[1,2])){M_comb[i,"PC"] = NA}else{M_comb[i,"PC"] = B_cor[1,2]}
+  
+  #B = dcast(data = A, formula = user~item, value.var = "rating")
+  #B = B[,-1]
+  B = B_fixed[intersect(which(!is.na(B_fixed[1,])),which(!is.na(B_fixed[2,])))]
+  B_cs = cosine_similarity(as.matrix(B))
+  if(is.na(B_cs[1,2])){M_comb[i,"CS"] = NA}else{M_comb[i,"CS"] = B_cs[1,2]}
+  
+  #A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  #B = dcast(data = A, formula = user~item, value.var = "rating")
+  B = B_fixed[,-1]
+  M_comb[i,"LiRaU"] = lira(x_u = B[1,], x_v = B[2,], num_ratings = 5)
+  #cat("iteration:", i, "/", nrow(M_comb),"\n")
+  #i = 1
+  #A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  #B = dcast(data = A, formula = user~item, value.var = "rating")
+  #B = B[,-1]
+  B_diff = B[1,] - B[2,]
+  #mean(unlist(B_diff), na.rm = TRUE)
+  M_comb[i,"LiRaG"] = v_pop/var(unlist(B_diff), na.rm = TRUE)
+
+}
+end = Sys.time()
+print(end - start)
+
+head(M_comb, n = 15)
+
+
+
+  
+
+
+
+
 
 
 
