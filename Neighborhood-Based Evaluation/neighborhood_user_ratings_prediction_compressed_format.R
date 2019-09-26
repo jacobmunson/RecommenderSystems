@@ -1,12 +1,15 @@
-
+source('~/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
 # under construction
 library(readr)
-D <- read.csv("C:/Users/Jacob/Downloads/ml-latest-small/ml-latest-small/ratings.csv")
+library(dplyr)
+library(tidyverse)
+library(reshape2)
+D = read_csv("Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
 #D <- read.csv("C:/Users/Jacob/Downloads/ml-20m/ml-20m/ratings.csv")
 colnames(D) = c("user","item","rating","timestamp")
 dim(D)
 #D_total = D
-set.seed(2)
+set.seed(3)
 test = sample(x = seq(1,nrow(D),1), size = 0.2*nrow(D), replace = FALSE) #33098 - 50000 /  91924 - 100000
 
 
@@ -18,23 +21,24 @@ D = D_train
 
 str(D)
 head(D)
-length(unique(D$user)) # 910 users 
-
+length(unique(D$user)) # 610 users 
 
 build_comparison_list = function(dataset){
-  
+  dataset = D
   cat("Start Time:", format(Sys.time(), "%a %b %d %X %Y"))
   C = data.frame(user1 = NULL, user2 = NULL)
   start = Sys.time()
   for(i in 1:length(unique(dataset$user))){
-    #i = 2
+    #print(i)
+    #i = 1
     items = dataset[which(dataset$user == unique(dataset$user)[i]),"item"]
+    items = items$item
     coraters_total = c()
     for(j in 1:length(unique(items))){
       #print(j)
       #j = 1
       coraters = dataset[which(dataset$item == items[j]),"user"]
-      coraters_total = c(coraters_total, coraters)
+      coraters_total = c(coraters_total, coraters$user)
     }
     coraters_total = unique(coraters_total)
     
@@ -62,13 +66,6 @@ build_comparison_list = function(dataset){
 D_similarity = build_comparison_list(dataset = D)
 
 
-# if(length(which(C[,1] == C[,2])) > 0){
-#   C = C[-which(C[,1] == C[,2]),] # only run once
-#   dim(C)
-#   print("removed entry")
-# }
-# dim(C) # should no longer be necessary
-
 head(M_comb)
 M_comb = cbind(D_similarity, PC = NA)
 M_comb = as.matrix(M_comb)
@@ -80,7 +77,6 @@ dim(M_comb)
 library(reshape2)
 
 ## Filling in Pearson Correlation
-library(reshape2)
 for(i in 1:nrow(M_comb)){
   A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
   B = dcast(data = A, formula = user~item, value.var = "rating")
@@ -298,27 +294,6 @@ mean(ratings_mae_lg, na.rm = TRUE) # 0.739, 0.761
 
 
 
-for(i in 1:nrow(M_comb)){}
-
-pc_function = function(i){
-
-  A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
-  B = dcast(data = A, formula = user~item, value.var = "rating")
-  B = B[,-1]
-  #cat("i",i,length(intersect(which(!is.na(B[1,])),which(!is.na(B[2,])))), "overlap", "\n")
-  cat("iteration:", i, "/", nrow(M_comb),"\n")
-  B_cor = cor(t(B), use = "pairwise.complete.obs")
-  if(is.na(B_cor[1,2])){M_comb[i,"PC"] = NA}else{M_comb[i,"PC"] = B_cor[1,2]}
-  
-}
-
-vapply(FUN = pc_function, X = 1:nrow(M_comb))
-sapply(X = 1:nrow(M_comb), FUN = pc_function)
-
-
-
-
-
 
 
 diffs = c()
@@ -373,11 +348,87 @@ for(i in 1:nrow(M_comb)){
 end = Sys.time()
 print(end - start)
 
-head(M_comb, n = 15)
 
 
+#D_head = head(D_similarity)
+#D_head = cbind(D_head, PC = NA, CS = NA, LiRaU = NA, LiRaG = NA)
 
+# needs 'v_pop' for LiRaG!!!!
+
+similarity = function(i, similarity_measure, training_dataset, pairwise_comparison_dataset){
+  #cat("iteration:", i, "/", nrow(D_head),"\n")
+  #i = 1
+  #print(D_head[i,1])
+  #print(D_head[i,2])
+  A = rbind(training_dataset[which(training_dataset$user == as.numeric(pairwise_comparison_dataset[i,1])),],
+            training_dataset[which(training_dataset$user == as.numeric(pairwise_comparison_dataset[i,2])),])
+  #print(A)
+  #print(dim(A))
+  B_fixed = dcast(data = A, formula = user~item, value.var = "rating")
   
+  if(similarity_measure == "PearsonCorrelation"){
+    B = B_fixed[,-1]
+    B_cor = cor(t(B), use = "pairwise.complete.obs")
+    #print(B_cor)
+    if(is.na(B_cor[1,2])){return(NA)}else{return(B_cor[1,2])}
+  }
+
+  #return(as.numeric(D_head[i,"PC"]))
+  #B = dcast(data = A, formula = user~item, value.var = "rating")
+  #B = B[,-1]
+  
+  if(similarity_measure == "CosineSimilarity"){
+    B = B_fixed[intersect(which(!is.na(B_fixed[1,])),which(!is.na(B_fixed[2,])))]
+    B_cs = cosine_similarity(as.matrix(B))
+    if(is.na(B_cs[1,2])){return(NA)}else{return(B_cs[1,2])}
+  }
+  # 
+  # #A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  #B = dcast(data = A, formula = user~item, value.var = "rating")
+  
+  if(similarity_measure == "LiRaU"){
+    B = B_fixed[,-1]
+    #D_head[i,"LiRaU"] = 
+    return(lira(x_u = B[1,], x_v = B[2,], num_ratings = 5))
+  }
+  # #cat("iteration:", i, "/", nrow(M_comb),"\n")
+  # #i = 1
+  # #A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  #B = dcast(data = A, formula = user~item, value.var = "rating")
+  #B = B[,-1]
+  if(similarity_measure == "LiRaG"){
+    B = B_fixed[,-1]
+    B_diff = B[1,] - B[2,]
+    #mean(unlist(B_diff), na.rm = TRUE)
+    #D_head[i,"LiRaG"] = 
+    return(v_pop/var(unlist(B_diff), na.rm = TRUE))
+  }
+  # 
+}
+
+#similarity(1, similarity_measure = "PearsonCorrelation", training_dataset = D, pairwise_comparison_dataset = D_head)
+similarity_vectorized = Vectorize(similarity, vectorize.args = "i")
+#similarity(1:nrow(D_head))
+
+M_test
+
+training_dataset = D
+pairwise_data = M_test
+cat("Starting time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
+d_pc = similarity_vectorized(1:nrow(pairwise_data), similarity_measure = "PearsonCorrelation", training_dataset = D, pairwise_comparison_dataset = pairwise_data)
+cat("Pearson done... Starting Cosine... | Time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
+d_cs = similarity_vectorized(1:nrow(pairwise_data), similarity_measure = "CosineSimilarity", training_dataset = D, pairwise_comparison_dataset = pairwise_data)
+cat("Cosine done... Starting Uniform LiRa... | Time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
+d_lu = similarity_vectorized(1:nrow(pairwise_data), similarity_measure = "LiRaU", training_dataset = D, pairwise_comparison_dataset = pairwise_data)
+cat("Uniform LiRa done... Starting Gaussian LiRa... | Time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
+d_lg = similarity_vectorized(1:nrow(pairwise_data), similarity_measure = "LiRaG", training_dataset = D, pairwise_comparison_dataset = pairwise_data)
+cat("Filling matrix | Time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
+pairwise_data[,"PC"] = d_pc
+pairwise_data[,"CS"] = d_cs
+pairwise_data[,"LiRaU"] = d_lu
+pairwise_data[,"LiRaG"] = d_lg
+pairwise_data
+
 
 
 

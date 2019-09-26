@@ -1,0 +1,24 @@
+Dataset,Percent of Dataset Used,Cores,Runtime,Number Unique Comparisons,Method,Version,Notes
+20M ML,1%,5,~3min,~800k,shards,1,none
+20M ML,5%,5,1.04hr,"20,027,983",shards,1,none
+20M ML,7%,5,2.28hr,"39,703,894",shards,1,none
+20M ML,7%,6,1.8hr,"39,703,894",shards,1,none
+20M ML,7%,6,6.82hr,"39,703,894",user,1,none
+20M ML,10%,6,2.43hr,"80,989,018",shards,1,none
+20M ML,15%,6,Xhr,crashed,shards,1,no feedback
+20M ML,15%,6,>7.4hr,killed,shards,1,manually killed
+100k ML,100%,5,13.14sec,"164,054",shards,2,faster
+20M ML,1%,5,45.98sec,"830,951",shards,2,faster
+20M ML,5%,5,21.11min,"20,027,983",shards,2,3x faster
+20M ML,10%,5,1.79hr,"80,989,018",shards,2,faster with N-1 cores
+100k ML,100%,5,54sec,"164,054",shards,2,bigmemory package (slower)
+20M ML,15%,5,5.93hr,killed,shards,2,manually killed - RAM bottleneck
+20M ML,15%,5,Xhr,crashed,shards-10,2,Rstudio crashed - RAM better (?)
+20M ML,15%,5,2.87hr,"181,610,832",shards-25,2,Max Ram - 16GB
+20M ML,15%,5,2.63hr,"181,610,832",shards-50,2,NONE
+20M ML,15%,5,2.53hr,"181,610,832",shards-100,2,move to 25%
+20M ML,25%,5,7.65hr,"518,881,629",shards-100,2,NONE
+20M ML,25%,5,7.06hr,"518,881,629",shards-150,2,Increase%
+20M ML,25%,6,6.94hr,"518,881,629",shards-150,2,Small Performance Gain w/ +1 core
+1M ML,100%,6,23.45min,"17,472,510",shards-150,2,Testing on 1M
+1M ML,100%,6,25.93min,"17,472,510",shards-6,2,Testing on 1M

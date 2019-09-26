@@ -1,0 +1,26 @@
+,,Run 1,Run 2
+,k,,
+Pearson Correlation,3,0.816,0.832
+Cosine Similarity,3,0.805,0.824
+LiRa - Uniform,3,0.808,0.821
+LiRa - Gaussian,3,0.796,0.826
+,,,
+Pearson Correlation,5,0.776,0.797
+Cosine Similarity,5,0.771,0.787
+LiRa - Uniform,5,0.786,0.795
+LiRa - Gaussian,5,0.768,0.792
+,,,
+Pearson Correlation,7,0.761,0.777
+Cosine Similarity,7,0.756,0.77
+LiRa - Uniform,7,0.774,0.782
+LiRa - Gaussian,7,0.754,0.777
+,,,
+Pearson Correlation,10,0.749,0.767
+Cosine Similarity,10,0.745,0.761
+LiRa - Uniform,10,0.767,0.775
+LiRa - Gaussian,10,0.745,0.757
+,,,
+Pearson Correlation,15,0.74,0.758
+Cosine Similarity,15,0.739,0.757
+LiRa - Uniform,15,0.761,0.767
+LiRa - Gaussian,15,0.739,0.761
