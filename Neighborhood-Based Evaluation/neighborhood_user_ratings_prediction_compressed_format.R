@@ -412,8 +412,11 @@ similarity_vectorized = Vectorize(similarity, vectorize.args = "i")
 
 M_test
 
+# probably wrap the below function calls into a larger function and allow them to run in parallel
+
 training_dataset = D
 pairwise_data = M_test
+start = Sys.time()
 cat("Starting time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
 d_pc = similarity_vectorized(1:nrow(pairwise_data), similarity_measure = "PearsonCorrelation", training_dataset = D, pairwise_comparison_dataset = pairwise_data)
 cat("Pearson done... Starting Cosine... | Time:", format(Sys.time(), "%a %b %d %X %Y"), "/n")
@@ -427,6 +430,8 @@ pairwise_data[,"PC"] = d_pc
 pairwise_data[,"CS"] = d_cs
 pairwise_data[,"LiRaU"] = d_lu
 pairwise_data[,"LiRaG"] = d_lg
+end = Sys.time()
+print(end - start)
 pairwise_data
 
 
