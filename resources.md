@@ -32,6 +32,10 @@ https://www.kdnuggets.com/2016/02/nine-datasets-investigating-recommender-system
 
 https://gab41.lab41.org/the-nine-must-have-datasets-for-investigating-recommender-systems-ce9421bf981c#.abs1ftta9
 
-## Big Data Methods :
+## Big Data Methods:
 
 https://arxiv.org/abs/1604.06414
+
+## Streaming Algorithms:
+
+https://www-users.cs.umn.edu/~mokbel/demos/StreamRecDemo.pdf
