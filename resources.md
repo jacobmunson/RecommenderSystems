@@ -39,3 +39,5 @@ https://arxiv.org/abs/1604.06414
 ## Streaming Algorithms:
 
 https://www-users.cs.umn.edu/~mokbel/demos/StreamRecDemo.pdf
+
+https://arxiv.org/abs/1607.06182
