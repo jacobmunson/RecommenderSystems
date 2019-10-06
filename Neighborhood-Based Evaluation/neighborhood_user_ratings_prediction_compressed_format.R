@@ -66,10 +66,11 @@ build_comparison_list = function(dataset){
 D_similarity = build_comparison_list(dataset = D)
 
 
-head(M_comb)
 M_comb = cbind(D_similarity, PC = NA)
 M_comb = as.matrix(M_comb)
-colnames(M_comb) = c("User1","User2","PC")
+#M_comb = as_tibble(M_comb)
+
+#colnames(M_comb) = c("User1","User2","PC")
 dim(M_comb)
 #M_comb = M_comb[-which(M_comb[,1] == M_comb[,2]),] # should be able to skip
 head(M_comb, n = 15)
@@ -77,17 +78,27 @@ dim(M_comb)
 library(reshape2)
 
 ## Filling in Pearson Correlation
+start = Sys.time()
 for(i in 1:nrow(M_comb)){
-  A = rbind(D[which(D$user == M_comb[i,1]),],D[which(D$user == M_comb[i,2]),])
+  #i = 1
+  A = rbind(D[which(D$user == M_comb[i,"user1"]),],D[which(D$user == M_comb[i,"user2"]),])
+  #A = rbind(D[which(D$user == as.numeric(M_comb[i,"user1"])),],D[which(D$user == as.numeric(M_comb[i,"user2"])),])
+  
   B = dcast(data = A, formula = user~item, value.var = "rating")
   B = B[,-1]
   #cat("i",i,length(intersect(which(!is.na(B[1,])),which(!is.na(B[2,])))), "overlap", "\n")
-  cat("iteration:", i, "/", nrow(M_comb),"\n")
+  #cat("iteration:", i, "/", nrow(M_comb),"\n")
   B_cor = cor(t(B), use = "pairwise.complete.obs")
   if(is.na(B_cor[1,2])){M_comb[i,"PC"] = NA}else{M_comb[i,"PC"] = B_cor[1,2]}
 }
-
+end = Sys.time()
+print(end - start)
 head(M_comb, n = 15)
+# as.matrix & printing - 23.2min
+# as.matrix & not printing - 17.15min
+# as_tibble & printing - 
+# as_tibble & not printing - 17.81
+
 
 ## Filling in Cosine Similarity
 M_comb = cbind(M_comb, 0)
@@ -176,86 +187,113 @@ head(M_comb, n = 15)
 
 head(D_test)
 
-D_test = as.matrix(D_test)
-
+#D_test = as.matrix(D_test)
+D_test = as_tibble(D_test)
 
 sim_msr = "PC"
 sim_msr = "CS"
 sim_msr = "LiRaU"
 sim_msr = "LiRaG"
 
-k = 15
+k = 5
 
-ratings_mae = c()
-
-for(i in 1:nrow(D_test)){ # write this as a "validation" function(k, sim_msr)
-  #i = 9211
-  user = D_test[i, "user"]
-  item = D_test[i, "item"]
-  rating = D_test[i,"rating"]
+# needs to be heavily abstracted
+performance_evaluation = function(k, sim_msr){
   
-  M_user = M_comb[which(M_comb[,"User1"] == user | M_comb[,"User2"] == user),]
-  M_user = M_user[order(M_user[,sim_msr], decreasing = TRUE),] # not needed yet, I think
+  ratings_mae = c()
   
-  neighbors = unique(c(M_user[,"User1"],M_user[,"User2"]))
-  possible_users = D_train[which(D_train$item == item),"user"]
-  
-  if(length(possible_users) != 0){
-    viable_neighbors = intersect(neighbors, possible_users)
+  for(i in 1:nrow(D_test)){ # write this as a "validation" function(k, sim_msr)
+    #i = 19932
+    #print(i)
+    #i = 15
+    #i = 1
+    #user = D_test[i, "user"]
+    #item = D_test[i, "item"]
+    #rating = D_test[i,"rating"]
+    D_test_i = D_test[i,]
+    D_test_i
     
-    if(length(viable_neighbors) != 0){
+    M_user = M_comb[which(M_comb[,"user1"] == D_test_i$user | M_comb[,"user2"] == D_test_i$user),]
+    M_user
+    #M_user = M_user[order(M_user[,sim_msr], decreasing = TRUE),] # not needed yet, I think
     
-      M_user = subset(M_user, M_user[,"User1"] %in% viable_neighbors | M_user[,"User2"] %in% viable_neighbors)
-      M_user = M_user[order(M_user[,sim_msr], decreasing = TRUE),]
+    if(is.null(nrow(M_user))){M_user = t(as.matrix(M_user))}
+    
+    neighbors = unique(c(M_user[,"user1"],M_user[,"user2"]))
+    possible_users = D_train[which(D_train$item == D_test_i$item),"user"]
+    
+    if(length(possible_users) != 0){
+      viable_neighbors = intersect(neighbors, possible_users$user)
       
-      if(length(nrow(M_user) > 1) != 0){
+      if(length(viable_neighbors) != 0){
         
-        rows = min(nrow(M_user), k)
-        top_k_users = c(M_user[1:rows,c("User1","User2")])
-        top_k_users = top_k_users[-which(top_k_users == user)]
-        M_user = M_user[1:rows,]
+        M_user = subset(M_user, M_user[,"user1"] %in% viable_neighbors | M_user[,"user2"] %in% viable_neighbors)
+        M_user = M_user[order(M_user[,sim_msr], decreasing = TRUE),]
         
-      }else{
-        top_k_users = c(M_user[c("User1","User2")])
-        top_k_users = top_k_users[-which(top_k_users == user)]
+        if(length(nrow(M_user) > 1) != 0){
+          
+          rows = min(nrow(M_user), k)
+          top_k_users = c(M_user[1:rows,c("user1","user2")])
+          top_k_users = top_k_users[-which(top_k_users == D_test_i$user)]
+          M_user = M_user[1:rows,]
+          
+        }else{
+          top_k_users = c(M_user[c("user1","user2")])
+          top_k_users = top_k_users[-which(top_k_users == D_test_i$user)]
+          
+        }
+        #top_k_users = top_k_users[-which(top_k_users == user)]
         
-      }
-      #top_k_users = top_k_users[-which(top_k_users == user)]
-      
-      #subset(D_train, (D_train$user %in% top_k_users) & (D_train$item %in% item))
-      #item #6
-      
-      if(length(top_k_users) > 1){
-        M_user = cbind(M_user, user = top_k_users)
-        M_user = M_user[,c("user",sim_msr)]
-      }else{
-        M_user = c(top_k_users, M_user[sim_msr])
-        names(M_user)[1] = "user"
-        M_user = t(data.frame(M_user))
+        #subset(D_train, (D_train$user %in% top_k_users) & (D_train$item %in% item))
+        #item #6
         
-      }
+        if(length(top_k_users) > 1){
+          
+          M_user = M_user[c(which(M_user[,"user1"] %in% top_k_users),which(M_user[,"user2"] %in% top_k_users)),]
+          M_user = cbind(M_user, user = top_k_users)
+          M_user = M_user[,c("user",sim_msr)]
+        }else{
+          M_user = c(top_k_users, M_user[sim_msr])
+          names(M_user)[1] = "user"
+          M_user = t(data.frame(M_user))
+          #enframe(t(M_user))
+        }
+        
+        #which(D_train$user %in% top_k_users)
+        #D_train[which(D_train$item %in% D_test_i$item),]
+        
+        M_user = M_user[order(M_user[,sim_msr], decreasing = TRUE),]
+        
+        neighbor_ratings = D_train[(which(D_train$user %in% top_k_users & D_train$item %in% D_train$item)),]
+        
+        if(is.null(nrow(M_user))){M_user = t(data.frame(M_user))}
+        
+        neighbor_ratings_df = merge(M_user, neighbor_ratings, by = "user")
+        
+        if(length(which(neighbor_ratings_df[,sim_msr] < 0)) > 0){
+          neighbor_ratings_df = neighbor_ratings_df[-which(neighbor_ratings_df[,sim_msr] < 0),]
+        }
+        # NEED TO PUT RESTRICTION FOR >0 SIMILARITY
+        pred_rating = sum(neighbor_ratings_df[,sim_msr] * neighbor_ratings_df[,"rating"])/sum(neighbor_ratings_df[,sim_msr])
+        #rating
+        #print(i)
+        ratings_mae[i] = abs(pred_rating - D_test_i$rating)
+        
+      }else{ratings_mae[i] = NA}
       
-      neighbor_ratings = D_train[(which(D_train$user %in% top_k_users & D_train$item %in% item)),]
-      
-      neighbor_ratings_df = merge(M_user, neighbor_ratings, by = "user")
-      
-      if(length(which(neighbor_ratings_df[,sim_msr] < 0)) > 0){
-        neighbor_ratings_df = neighbor_ratings_df[-which(neighbor_ratings_df[,sim_msr] < 0),]
-      }
-      # NEED TO PUT RESTRICTION FOR >0 SIMILARITY
-      pred_rating = sum(neighbor_ratings_df[,sim_msr] * neighbor_ratings_df[,"rating"])/sum(neighbor_ratings_df[,sim_msr])
-      #rating
-      print(i)
-      ratings_mae[i] = abs(pred_rating - rating)
       
     }else{ratings_mae[i] = NA}
     
-        
-    }else{ratings_mae[i] = NA}
-    
+    #cat(i,ratings_mae[i],"\n")
+  }
+  
+  cat("k:",k,"| Similarity:",sim_msr,"| MAE",mean(ratings_mae, na.rm = TRUE))
+  return(mean(ratings_mae, na.rm = TRUE))
+  
 }
 
-mean(ratings_mae, na.rm = TRUE)
+
+
 
 #ratings_mae_cs = ratings_mae
 #ratings_mae_pc = ratings_mae
@@ -263,10 +301,10 @@ mean(ratings_mae, na.rm = TRUE)
 #ratings_mae_lg = ratings_mae
 
 # k = 3
-mean(ratings_mae_pc, na.rm = TRUE) # 0.816, 0.832
-mean(ratings_mae_cs, na.rm = TRUE) # 0.805, 0.824
-mean(ratings_mae_lu, na.rm = TRUE) # 0.808, 0.821
-mean(ratings_mae_lg, na.rm = TRUE) # 0.796, 0.826
+mean(ratings_mae_pc, na.rm = TRUE) # 0.816, 0.832, 0.827, 
+mean(ratings_mae_cs, na.rm = TRUE) # 0.805, 0.824, 0.807
+mean(ratings_mae_lu, na.rm = TRUE) # 0.808, 0.821, 0.897
+mean(ratings_mae_lg, na.rm = TRUE) # 0.796, 0.826, 0.799
 
 # k = 5
 mean(ratings_mae_pc, na.rm = TRUE) # 0.776, 0.797
@@ -312,7 +350,7 @@ for(i in 1:iter){
 ## Filling in Similarity
 
 M_comb = cbind(D_similarity, PC = NA, CS = NA, LiRaU = NA, LiRaG = NA)
-
+M_comb = as.matrix(M_comb)
 head(M_comb, n = 15)
 
 start = Sys.time()
