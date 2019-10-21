@@ -1,11 +1,11 @@
-	Method,	k,	MAE
-Pearson Correlation,	NN-RST,	3	
-Cosine Similarity,	NN-RST,	3	
-LiRa - Uniform,	NN-RST,	3	
-LiRa - Gaussian,	NN-RST,	3	
-LiRa - LogGaussian,	NN-RST,	3	
-Pearson Correlation,	kNN,	3	
-Cosine Similarity,	kNN,	3	
-LiRa - Uniform,	kNN,	3	
-LiRa - Gaussian,	kNN,	3	
-LiRa - LogGaussian,	kNN,	3	
+	Similarity Measure, Method, k, MAE
+Pearson Correlation,	NN-RST,	3,	
+Cosine Similarity,	NN-RST,	3,	
+LiRa - Uniform,	NN-RST,	3,	
+LiRa - Gaussian,	NN-RST,	3,	
+LiRa - LogGaussian,	NN-RST,	3,	
+Pearson Correlation,	kNN,	3,	
+Cosine Similarity,	kNN,	3,	
+LiRa - Uniform,	kNN,	3,	
+LiRa - Gaussian,	kNN,	3,	
+LiRa - LogGaussian,	kNN,	3,	
