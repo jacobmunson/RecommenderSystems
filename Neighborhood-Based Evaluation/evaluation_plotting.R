@@ -2,6 +2,7 @@ library(readr)
 D <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_80_20_split.csv")
 head(D)
 
+unique(D$k)
 D %>% filter(`Similarity Measure` == "Pearson Correlation", Method == "kNN") %>% select(k, MAE)
 D %>% filter(`Similarity Measure` == "Cosine Similarity", Method == "kNN") %>% select(k, MAE)
 D %>% filter(`Similarity Measure` == "LiRa - Uniform", Method == "kNN") %>% select(k, MAE)
