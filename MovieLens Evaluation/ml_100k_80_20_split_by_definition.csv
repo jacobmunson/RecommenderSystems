@@ -109,3 +109,13 @@ Cosine Similarity,    kNN, 80, 0.7467715,  0.717185, 0.0396192
 LiRa - Uniform,    kNN, 80,  0.751219, 0.7125164, 0.0515198
 LiRa - Gaussian,    kNN, 80, 0.7461766, 0.7167987, 0.0393713
 LiRa - LogGaussian,    kNN, 80, 0.7461766, 0.7167987, 0.0393713
+Pearson Correlation, NN-RST, 3, 0.8011504, 0.7673835, 0.0421481
+Cosine Similarity, NN-RST, 3, 0.8868981, 0.8490333, 0.0426935
+LiRa - Uniform, NN-RST, 3, 0.8121304,  0.769605, 0.0523628
+LiRa - Gaussian, NN-RST, 3, 0.8116169, 0.7772076, 0.0423960
+LiRa - LogGaussian, NN-RST, 3, 0.8856383, 0.8480907, 0.0423960
+Pearson Correlation,    kNN, 3, 0.8008636, 0.7671485, 0.0420985
+Cosine Similarity,    kNN, 3, 0.8186236, 0.7837143, 0.0426439
+LiRa - Uniform,    kNN, 3, 0.8116149, 0.7691567, 0.0523132
+LiRa - Gaussian,    kNN, 3, 0.8015094, 0.7675286, 0.0423960
+LiRa - LogGaussian,    kNN, 3, 0.8015094, 0.7675286, 0.0423960
