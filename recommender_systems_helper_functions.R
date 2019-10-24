@@ -30,3 +30,21 @@ lira = function(x_u, x_v, num_ratings){
   lira = log10(lira_top/lira_bottom)
   return(lira)
 }
+
+prediction_evaluation_function = function(train_set, test_set, similarity_vector){
+  
+  #mae_nn = c(); mae_knn = c()
+  if(length(similarity_vector) == 0 | any(is.na(similarity_vector))){mae_nn = NA; mae_knn = NA}else{
+    
+    neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
+    neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+    
+    pred_rating_nn = sum(neighbor_ratings$rating * neighbor_ratings$y)/sum(abs(neighbor_ratings$y)) # is this supposed to be /|abs(sim)|
+    mae_nn = abs(pred_rating_nn - test_set$rating)
+    
+    pred_rating_knn = mean(neighbor_ratings$rating)
+    mae_knn = abs(pred_rating_knn - test_set$rating)
+  }
+  return(c(mae_nn, mae_knn))
+}
+
