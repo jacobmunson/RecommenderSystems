@@ -3,9 +3,11 @@ D <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_80_20_spli
 D <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_80_20_split_by_definition.csv")
 
 head(D)
-
+unique(D$`Similarity Measure`)
 unique(D$k)
-D %>% filter(`Similarity Measure` == "Pearson Correlation", Method == "kNN") %>% select(k, MAE)
+
+D %>% filter(`Similarity Measure` == "Pearson Correlation - PWC" , Method == "kNN") %>% select(k, MAE)
+D %>% filter(`Similarity Measure` == "Pearson Correlation - IZ", Method == "kNN") %>% select(k, MAE)
 D %>% filter(`Similarity Measure` == "Cosine Similarity", Method == "kNN") %>% select(k, MAE)
 D %>% filter(`Similarity Measure` == "LiRa - Uniform", Method == "kNN") %>% select(k, MAE)
 D %>% filter(`Similarity Measure` == "LiRa - Gaussian", Method == "kNN") %>% select(k, MAE)
