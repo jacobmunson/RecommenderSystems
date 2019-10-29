@@ -24,9 +24,26 @@ mean_center_matrix <- function(D){
 }
 
 lira = function(x_u, x_v, num_ratings){
-  num_diff = length(which(!is.na(abs(x_u - x_v))))
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  num_diff = length(diff)
   lira_bottom = (1/num_ratings)^num_diff
-  lira_top = 0.5^(num_diff)
+  
+  d = num_ratings
+  if(any(diff == d - 1)){
+    lira_top = c()
+    for(i in 1:num_diff){
+      if(diff[i] == d - 1){
+        lira_top[i] = 1/(2^(d - 1))    
+      }else{
+        lira_top[i] = (1/2)^(1)
+      }
+    }
+    lira_top = prod(lira_top)
+  }else{
+    lira_top = 0.5^(num_diff)
+  }
+  
   lira = log10(lira_top/lira_bottom)
   return(lira)
 }
