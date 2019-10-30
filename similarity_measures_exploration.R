@@ -73,26 +73,15 @@ cor(x1,x2, use = "na.or.complete") # Only looking at co-rated items, PC = 0.866
 ## PC is the same as CS if vectors are user-centered prior to PC AND no missing values (i.e. same set of items rated)
 ## If we have missing values and exclude those observations for the appropriate user then that is different than imputing a 0
 
-
-
 ### LiRa Similarity ###
 # LiRa = log10(A/B)
 # A = prob(diff{x_u,x_v} | same cluster)
 # B = prob(diff{x_u,x_v} | pure chance)
 # A,B are given as lira_bottom,lira_top in following function
 
-lira = function(x_u, x_v, num_ratings){
-  num_diff = length(which(!is.na(abs(x_u - x_v))))
-  lira_bottom = (1/num_ratings)^num_diff
-  lira_top = 0.5^(num_diff)
-  lira = log10(lira_top/lira_bottom)
-  return(lira)
-}
-
 # Assumptions
 # d = number of ratings
 d = 5 # scores 1,2,3,4,5
-
 
 # Data Points 
 # (Nearly) Same vectors, but with missing values instead of 0s
@@ -129,4 +118,3 @@ y_u = c(1,1,5,4,0,0,3,0,5,0); y_u[y_u == 0] = NA
 y_v = c(1,1,5,5,0,0,1,1,3,1); y_v[y_v == 0] = NA
 lira(x_u = y_u, x_v = y_v, num_ratings = d) # 2.38
 cor(x = y_u, y = y_v, use = "pairwise.complete.obs") # 0.79
-
