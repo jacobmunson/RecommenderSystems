@@ -28,7 +28,7 @@ colnames(D) = c("user","item","rating","timestamp")
 dim(D)
 head(D)
 
-set.seed(1)
+set.seed(3)
 
 test = sample(x = seq(1,nrow(D),1), size = 0.20*nrow(D), replace = FALSE) #33098 - 50000 /  91924 - 100000
 D_test = D[test,]
@@ -64,7 +64,7 @@ rm(diff_vector) # pretty long, so let's remove it
 
 ## Setting k for kNN 
 # To-do: make this a vector and process all smaller k at same time
-K_global = 15 #, 40, 30, 20, 15, 10, 7, 5, 3)
+K_global = 40 # 80, 60, 50, 40, 30, 20, 15, 10, 7, 5, 3)
 
 
 ## Start Evaluation
@@ -94,7 +94,8 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
   D_subset =  D_test[shards[[i]],]
   
   for(j in 1:nrow(D_subset)){
-    #j = 1
+    #j = 3
+    #j=49
     #print(j)
     D_test_i = D_subset[j,]
     
@@ -110,8 +111,12 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     B_pc_pwc = cor(t(B), use = "pairwise.complete.obs")
     B_pc_pwc = B_pc_pwc[which(rownames(B_pc_pwc) == D_test_i$user),] # dplyr with arrange to cover step below and filter for below that
     B_pc_pwc = B_pc_pwc[order(B_pc_pwc, decreasing = TRUE)]
-    B_pc_pwc = B_pc_pwc[!is.na(B_pc_pwc)]
     B_pc_pwc = B_pc_pwc[-1]
+    
+    
+    #B_pc_pwc = B_pc_pwc[!is.na(B_pc_pwc)]
+    B_pc_pwc = B_pc_pwc[is.finite(B_pc_pwc)]
+    
     K = min(length(B_pc_pwc),K_global)
     B_pc_pwc = B_pc_pwc[1:K]
     
@@ -128,8 +133,13 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     B_pc_iz = cor(t(B_temp))
     B_pc_iz = B_pc_iz[which(rownames(B_pc_iz) == D_test_i$user),] # dplyr with arrange to cover step below and filter for below that
     B_pc_iz = B_pc_iz[order(B_pc_iz, decreasing = TRUE)]
-    B_pc_iz = B_pc_iz[!is.na(B_pc_iz)]
+    #B_pc_iz = B_pc_iz[!is.na(B_pc_iz)]
+    
     B_pc_iz = B_pc_iz[-1]
+    
+    B_pc_iz = B_pc_iz[is.finite(B_pc_iz)]
+    #B_pc_iz = B_pc_iz[!is.na(B_pc_iz)]
+    
     
     K = min(length(B_pc_iz),K_global)
     B_pc_iz = B_pc_iz[1:K]
@@ -150,10 +160,14 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     B_cs = B_cs[which(rownames(B_cs) == D_test_i$user),]
     B_cs = B_cs[order(B_cs, decreasing = TRUE)]
     #B_cs = B_cs[B_cs >= 0 & !is.na(B_cs)]
-    B_cs = B_cs[!is.na(B_cs)]
     B_cs = B_cs[-1]
+    
+    #B_cs = B_cs[!is.na(B_cs)]
+    B_cs = B_cs[is.finite(B_cs)]
+    
     K = min(length(B_cs),K_global)
     B_cs = B_cs[1:K]
+    #is.finite(Inf)
     
     pred_cs = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_cs)
     mae_cs_nn[j] = pred_cs[1]; 
@@ -164,48 +178,74 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     
     ## LiRa Uniform Similarity
     
-    B_lirau = lapply(1:nrow(B), FUN = function(j){lira(x_u = B[which(rownames(B) == D_test_i$user),], 
-                                                       x_v = B[j,], 
-                                                       num_ratings = length(unique(D_test$rating)))}) #length(unique(D_test$rating))
-    B_lirau = do.call(cbind.data.frame, B_lirau)
-    colnames(B_lirau) = rownames(B)
-    B_lirau = as.matrix.data.frame(B_lirau[order(B_lirau, decreasing = TRUE)])
-    B_lirau = B_lirau[,-1]
-    B_lirau = B_lirau[is.finite(B_lirau)]
-    K = min(length(B_lirau),K_global)
-    B_lirau = B_lirau[1:K]
+    if(nrow(B) > 1){
+      
+      B_lirau = lapply(1:nrow(B), FUN = function(k){lira(x_u = B[which(rownames(B) == D_test_i$user),], 
+                                                         x_v = B[k,], 
+                                                         num_ratings = length(unique(D_test$rating)))}) #length(unique(D_test$rating))
+      # time test this.
+      #library(microbenchmark)
+      #B_lirau = do.call(cbind.data.frame, B_lirau)
+      #bind
+      B_lirau = bind_cols(B_lirau)
+      
+      colnames(B_lirau) = rownames(B)
+      
+      #order(B_lirau, decreasing = T)# %>% arrange()
+      #arrange(desc(B_lirau))
+      B_lirau = as.matrix(B_lirau)
+      #B_lirau = as.matrix.data.frame(B_lirau[order(B_lirau, decreasing = TRUE)])
+      B_lirau = B_lirau[,order(B_lirau, decreasing = TRUE)]
+      
+      B_lirau = B_lirau[-1]
+      B_lirau = B_lirau[is.finite(B_lirau)]
+      #B_lirau = B_lirau[!is.na(B_lirau)]
+      # B_lirau = B_lirau[!is.nan(B_lirau)]
     
-    pred_lu = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lirau)
-    mae_lu_nn[j] = pred_lu[1]; 
-    mae_lu_knn[j] = pred_lu[2];
-    #if(any(is.na(B_lirau)) & length(B_lirau) == 1){mae_lu_nn[j] = NA; mae_lu_knn[j] = NA}else{
-    
-    ##### Prediction f()
-    
+      # B_lirau[is.finite(B_lirau)]
+      # B_lirau[!is.na(B_lirau)]
+      # B_lirau[!is.nan(B_lirau)]
+      # 
+      K = min(length(B_lirau),K_global)
+      B_lirau = B_lirau[1:K]
+      
+      pred_lu = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lirau)
+      mae_lu_nn[j] = pred_lu[1]; 
+      mae_lu_knn[j] = pred_lu[2];
+      #if(any(is.na(B_lirau)) & length(B_lirau) == 1){mae_lu_nn[j] = NA; mae_lu_knn[j] = NA}else{
+      
+      ##### Prediction f()
+      
+    }else{mae_lu_knn[j] = NA; mae_lu_nn[j] = NA}
     
     ## LiRa Gaussian Clusters
-    
-    # B = dcast(data = A, formula = user~item, value.var = "rating")
-    # B = B[order(B$user),]
-    # rownames(B) = B$user
-    # B = as.matrix(B[,-1])
     
     if(nrow(B) > 1){
       
       B_lira_gauss = lapply(1:nrow(B), 
-                            FUN = function(i){x_u = B[which(rownames(B) == D_test_i$user),];
-                            x_v = B[i,];
+                            FUN = function(k){x_u = B[which(rownames(B) == D_test_i$user),];
+                            x_v = B[k,];
                             (diff = x_u - x_v);
                             n = length(diff);v = var(diff, na.rm = TRUE);
                             #sqrt(n/2)*(v/v_pop - 1 - log(v/v_pop))
                             (v_pop/v)
                             })
       
-      B_lira_gauss = do.call(cbind.data.frame, B_lira_gauss)
+      B_lira_gauss = bind_cols(B_lira_gauss)
       colnames(B_lira_gauss) = rownames(B)
-      B_lira_gauss = as.matrix(B_lira_gauss[order(B_lira_gauss, decreasing = TRUE)], )
-      B_lira_gauss = B_lira_gauss[,-1]
+      B_lira_gauss = as.matrix(B_lira_gauss)
+      B_lira_gauss = B_lira_gauss[,order(B_lira_gauss, decreasing = TRUE)]
+      B_lira_gauss = B_lira_gauss[-1]
+      
+      # B_lira_gauss = do.call(cbind.data.frame, B_lira_gauss)
+      # colnames(B_lira_gauss) = rownames(B)
+      # B_lira_gauss = as.matrix(B_lira_gauss[order(B_lira_gauss, decreasing = TRUE)], )
+      # B_lira_gauss = B_lira_gauss[,-1]
+      
       B_lira_gauss = B_lira_gauss[is.finite(B_lira_gauss)]
+      #B_lira_gauss = B_lira_gauss[!is.na(B_lira_gauss)]
+      
+      
       K = min(length(B_lira_gauss),K_global)
       B_lira_gauss = B_lira_gauss[1:K]
       
@@ -221,28 +261,33 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     
     ## LiRa Gaussian Clusters
     
-    # B = dcast(data = A, formula = user~item, value.var = "rating")
-    # B = B[order(B$user),]
-    # rownames(B) = B$user
-    # B = as.matrix(B[,-1])
-    
     if(nrow(B) > 1){
       
       B_lira_gauss_log = lapply(1:nrow(B), 
-                                FUN = function(i){x_u = B[which(rownames(B) == D_test_i$user),];
-                                x_v = B[i,];
+                                FUN = function(k){x_u = B[which(rownames(B) == D_test_i$user),];
+                                x_v = B[k,];
                                 (diff = x_u - x_v);
                                 n = length(diff);v = var(diff, na.rm = TRUE);
                                 #sqrt(n/2)*(v/v_pop - 1 - log(v/v_pop))
                                 log(v_pop/v)
                                 })
       
-      B_lira_gauss_log = do.call(cbind.data.frame, B_lira_gauss_log)
+      B_lira_gauss_log = bind_cols(B_lira_gauss_log)
       colnames(B_lira_gauss_log) = rownames(B)
+      B_lira_gauss_log = as.matrix(B_lira_gauss_log)
+      B_lira_gauss_log = B_lira_gauss_log[,order(B_lira_gauss_log, decreasing = TRUE)]
+      B_lira_gauss_log = B_lira_gauss_log[-1]
       
-      B_lira_gauss_log = as.matrix(B_lira_gauss_log[order(B_lira_gauss_log, decreasing = TRUE)], )
-      B_lira_gauss_log = B_lira_gauss_log[,-1]
+      # B_lira_gauss_log = do.call(cbind.data.frame, B_lira_gauss_log)
+      # colnames(B_lira_gauss_log) = rownames(B)
+      # B_lira_gauss_log = as.matrix(B_lira_gauss_log[order(B_lira_gauss_log, decreasing = TRUE)], )
+      # B_lira_gauss_log = B_lira_gauss_log[,-1]
+      
+      
       B_lira_gauss_log = B_lira_gauss_log[is.finite(B_lira_gauss_log)]
+      #B_lira_gauss_log = B_lira_gauss_log[!is.na(B_lira_gauss_log)]
+      
+      
       K = min(length(B_lira_gauss_log),K_global)
       B_lira_gauss_log = B_lira_gauss_log[1:K]
       
@@ -260,20 +305,22 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
   
   sim = cbind(mae_cs_nn, mae_pc_pwc_nn, mae_pc_iz_nn, mae_lu_nn, mae_lg_nn, mae_lg_log_nn,
               mae_cs_knn, mae_pc_pwc_knn, mae_pc_iz_knn, mae_lu_knn, mae_lg_knn, mae_lg_log_knn)
-  sim    
-  
+  # length(which(is.na(sim)))    # 252
+  # length(sim)
+  # length(which(is.na(sim)))/length(sim)
+  # nrow(sim)
+  sim
   #}
   
 }
 
 stopCluster(cl);# dim(M)
 end = Sys.time()
-end - start
+end - start # 1.02
 
 
 head(sim_matrix, n = 15) # visual inspection
 stopifnot(nrow(sim_matrix) == nrow(D_test))
-
 
 data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,",
                           "Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,"),
