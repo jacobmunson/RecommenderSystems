@@ -28,7 +28,7 @@ user_df = rbind(x_1,x_2,x_3,x_4,x_5,x_6,x_7,x_8,x_9,x_10,x_11)
 # (v1 = var(differences, na.rm = TRUE)) # "population" variance
 
 
-iter = 500000
+iter = 2500
 diff_df = matrix(data = 0, nrow = iter, ncol = ncol(user_df))
 for(i in 1:iter){
   x = user_df[sample(x = 1:nrow(user_df), size = 2, replace = FALSE),]

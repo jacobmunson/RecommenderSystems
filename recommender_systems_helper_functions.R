@@ -23,13 +23,19 @@ mean_center_matrix <- function(D){
   apply(X = D, MARGIN = 1, FUN = function(row){row - mean(row, na.rm = TRUE)})
 }
 
-lira = function(x_u, x_v, num_ratings){
+lira = function(x_u, x_v, num_ratings, lira_pure_chance_pdf){
+  
   diff = abs(x_u - x_v)
   diff = diff[!is.na(diff)]
   num_diff = length(diff)
-  lira_bottom = (1/num_ratings)^num_diff
   
   d = num_ratings
+  
+  # pure chance
+  lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+
+
+  # same cluster
   if(any(diff == d - 1)){
     lira_top = c()
     for(i in 1:num_diff){
