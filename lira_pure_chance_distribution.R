@@ -6,7 +6,13 @@ V = seq(0.5,5,0.5)
 V = seq(1,5,1)
 V = unique(D$ratings)
 
+V = unique(D_test$rating)
+V = V[order(V, decreasing = F)]
+#unique(D_train$rating)
+
+
 # Determine Distribution
+diff = c()
 for(i in 1:100000){
   diff[i] = abs(sample(x = V, size = 1, replace = T) - sample(x = V, size = 1, replace = T))
 }
@@ -21,4 +27,4 @@ rownames(lira_pure_chance_pdf) = V - 0.5
 colnames(lira_pure_chance_pdf) = "prob"
 lira_pure_chance_pdf
 
-d = length(V)
+#d = length(V)

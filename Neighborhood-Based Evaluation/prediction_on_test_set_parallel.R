@@ -28,7 +28,7 @@ colnames(D) = c("user","item","rating","timestamp")
 dim(D)
 head(D)
 
-set.seed(3)
+set.seed(2)
 
 test = sample(x = seq(1,nrow(D),1), size = 0.20*nrow(D), replace = FALSE) #33098 - 50000 /  91924 - 100000
 D_test = D[test,]
@@ -64,7 +64,7 @@ rm(diff_vector) # pretty long, so let's remove it
 
 ## Setting k for kNN 
 # To-do: make this a vector and process all smaller k at same time
-K_global = 40 # 80, 60, 50, 40, 30, 20, 15, 10, 7, 5, 3)
+K_global = 3 # 80, 60, 50, 40, 30, 20, 15, 10, 7, 5, 3)
 
 
 ## Start Evaluation
@@ -317,7 +317,6 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
 stopCluster(cl);# dim(M)
 end = Sys.time()
 end - start # 1.02
-
 
 head(sim_matrix, n = 15) # visual inspection
 stopifnot(nrow(sim_matrix) == nrow(D_test))
