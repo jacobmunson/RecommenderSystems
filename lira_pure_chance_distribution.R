@@ -10,15 +10,19 @@ V = unique(D$ratings)
 for(i in 1:100000){
   diff[i] = abs(sample(x = V, size = 1, replace = T) - sample(x = V, size = 1, replace = T))
 }
+
+# Table Results
 table(diff)/100000
-sum(table(diff)/100000)
+stopifnot(sum(table(diff)/100000) == 1)
 plot(table(diff)/100000, xlab = "", ylab = "P(|diff|)", main = "Distribution - Pure Chance")
 
-
+# Formating
 lira_pure_chance_pdf = matrix(table(diff)/100000)
+colnames(lira_pure_chance_pdf) = "prob"
+
+# Select Appropriately
 rownames(lira_pure_chance_pdf) = V - 1
 rownames(lira_pure_chance_pdf) = V - 0.5
-colnames(lira_pure_chance_pdf) = "prob"
-lira_pure_chance_pdf
 
-d = length(V)
+# Visually examine
+lira_pure_chance_pdf
