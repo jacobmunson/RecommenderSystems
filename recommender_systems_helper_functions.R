@@ -54,6 +54,23 @@ lira = function(x_u, x_v, num_ratings, lira_pure_chance_pdf){
   return(lira)
 }
 
+pdf_on_differences_on_V = function(V){
+  V_grid = expand.grid(V, V)
+  V_grid$diff = abs(V_grid$Var1 - V_grid$Var2)
+  
+  if(range(diff(V))[1] != range(diff(V))[2]){
+    warning("Uneven spaced ratings")
+  }
+  
+  stopifnot(sum(table(V_grid$diff)/length(V)^2) == 1)
+  pcd = matrix(table(V_grid$diff)/length(V)^2)
+  rownames(pcd) = V - rep(diff(V)[1],length(V))
+  colnames(pcd) = "prob"
+  
+  return(pcd)
+  
+}
+
 prediction_evaluation_function = function(train_set, test_set, similarity_vector){
   
   #mae_nn = c(); mae_knn = c()
