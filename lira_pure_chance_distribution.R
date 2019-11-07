@@ -4,11 +4,37 @@
 # Ratings (pick one or make a better one)
 V = seq(0.5,5,0.5)
 V = seq(1,5,1)
-V = unique(D$ratings)
+V = unique(D$rating)
 
 V = unique(D_test$rating)
 V = V[order(V, decreasing = F)]
 #unique(D_train$rating)
+
+d = length(V) # number of unique values 
+
+pdf_on_differences_on_V = function(V){
+  V_grid = expand.grid(V, V)
+  V_grid$diff = abs(V_grid$Var1 - V_grid$Var2)
+  
+  if(range(diff(V))[1] != range(diff(V))[2]){
+    warning("Uneven spaced ratings")
+  }
+
+  stopifnot(sum(table(V_grid$diff)/length(V)^2) == 1)
+  pcd = matrix(table(V_grid$diff)/length(V)^2)
+  rownames(pcd) = V - rep(diff(V)[1],length(V))
+  colnames(pcd) = "prob"
+  
+  return(pcd)
+  
+}
+
+pdf_on_differences_on_V(V = seq(0.5,5,0.5))
+
+plot(pdf_on_differences_on_V(V))
+
+#####################################
+# Numerically Doing the Same Things #
 
 # Determine Distribution
 diff = c()
