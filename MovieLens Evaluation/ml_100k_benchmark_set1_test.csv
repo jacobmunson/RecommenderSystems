@@ -1,1 +1,13 @@
-
+	Similarity Measure, Method, k, MAE, MAE_NA, %NA
+Cosine Similarity, NN-RST, 3, 0.8801155, 0.8787073, 0.00160
+Pearson Correlation - PWC, NN-RST, 3, 0.9140239, 0.9124244, 0.00175
+Pearson Correlation - IZ, NN-RST, 3, 0.9159399, 0.9144744, 0.00160
+LiRa - Uniform, NN-RST, 3, 0.8882285, 0.8868073, 0.00160
+LiRa - Gaussian, NN-RST, 3, 0.8903406, 0.8889161, 0.00160
+LiRa - LogGaussian, NN-RST, 3,  0.923532, 0.9220544, 0.00160
+Cosine Similarity,    kNN, 3, 0.8789229, 0.8775167, 0.00160
+Pearson Correlation - PWC,    kNN, 3,  0.902855,  0.901275, 0.00175
+Pearson Correlation - IZ,    kNN, 3, 0.8806424, 0.8792333, 0.00160
+LiRa - Uniform,    kNN, 3, 0.8154881, 0.8141833, 0.00160
+LiRa - Gaussian,    kNN, 3, 0.8842732, 0.8828583, 0.00160
+LiRa - LogGaussian,    kNN, 3, 0.8842732, 0.8828583, 0.00160
