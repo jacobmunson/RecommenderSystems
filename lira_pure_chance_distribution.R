@@ -12,26 +12,8 @@ V = V[order(V, decreasing = F)]
 
 d = length(V) # number of unique values 
 
-pdf_on_differences_on_V = function(V){
-  V_grid = expand.grid(V, V)
-  V_grid$diff = abs(V_grid$Var1 - V_grid$Var2)
-  
-  if(range(diff(V))[1] != range(diff(V))[2]){
-    warning("Uneven spaced ratings")
-  }
-
-  stopifnot(sum(table(V_grid$diff)/length(V)^2) == 1)
-  pcd = matrix(table(V_grid$diff)/length(V)^2)
-  rownames(pcd) = V - rep(diff(V)[1],length(V))
-  colnames(pcd) = "prob"
-  
-  return(pcd)
-  
-}
-
-pdf_on_differences_on_V(V = seq(0.5,5,0.5))
-
-plot(pdf_on_differences_on_V(V))
+lira_pure_chance_pdf = lira_pure_chance_distribution(V = V)
+lira_same_cluster_pdf = lira_same_cluster_distribution(V = V)
 
 #####################################
 # Numerically Doing the Same Things #
