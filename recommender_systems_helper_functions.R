@@ -36,25 +36,42 @@ lira = function(x_u, x_v, num_ratings, lira_pure_chance_pdf){
 
 
   # same cluster
-  if(any(diff == d - 1)){
+#  if(any(diff == d - 1)){
     lira_top = c()
     for(i in 1:num_diff){
       if(diff[i] == d - 1){
         lira_top[i] = 1/(2^(d - 1))    
       }else{
-        lira_top[i] = (1/2)^(1)
+        lira_top[i] = (1/2)^(diff[i] + 1)
       }
     }
     lira_top = prod(lira_top)
-  }else{
-    lira_top = 0.5^(num_diff)
-  }
+#  }
   
   lira = log10(lira_top/lira_bottom)
   return(lira)
 }
 
-pdf_on_differences_on_V = function(V){
+
+
+lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
+  
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  num_diff = length(diff)
+  
+  #d = num_ratings
+  
+  # pure chance
+  lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  lira_top = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
+
+  
+  lira = log10(lira_top/lira_bottom)
+  return(lira)
+}
+
+lira_pure_chance_distribution = function(V){
   V_grid = expand.grid(V, V)
   V_grid$diff = abs(V_grid$Var1 - V_grid$Var2)
   
@@ -68,6 +85,27 @@ pdf_on_differences_on_V = function(V){
   colnames(pcd) = "prob"
   
   return(pcd)
+  
+}
+
+lira_same_cluster_distribution = function(V){
+  
+  if(range(diff(V))[1] != range(diff(V))[2]){
+    warning("Uneven spaced ratings")
+  }
+  
+  d = max(V)
+  del_max = d - 2
+  c_del = c()
+  for(del in 0:del_max){
+    #print((1/2)^(del + 1))  
+    c_del[del+1] = (1/2)^(del + 1)
+  }
+  c_del[del_max+2] = 1 - sum(c_del)
+  stopifnot(sum(c_del) == 1)
+  
+  scd = matrix(c_del, dimnames = list(V - rep(diff(V)[1],length(V)),"prob"))
+  return(scd)
   
 }
 
