@@ -35,6 +35,9 @@ D_test = D[test,]
 D_train = D[-test,]
 nrow(D_test) + nrow(D_train) == nrow(D)
 
+nrow(D_test)
+nrow(D_train)
+
 ## Splitting the dataset into smaller peices for parallel processing
 chunk = function(vector, num_splits){return(split(vector, factor(sort(rank(vector) %% num_splits))))}
 dim(D_test)
@@ -64,9 +67,7 @@ rm(diff_vector) # pretty long, so let's remove it
 
 ## Setting k for kNN 
 # To-do: make this a vector and process all smaller k at same time
-K_global = 15 # 80, 60, 50, 40, 30, 20, 15, 10, 7, 5, 3)
-
-
+K_global = 5
 ## Start Evaluation
 rm(sim_matrix);gc() # 
 start = Sys.time()
@@ -182,7 +183,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
       
       B_lirau = lapply(1:nrow(B), FUN = function(k){lira(x_u = B[which(rownames(B) == D_test_i$user),], 
                                                          x_v = B[k,], 
-                                                         num_ratings = length(unique(D_test$rating)), 
+                                                         lira_same_cluster_pdf = lira_same_cluster_pdf, 
                                                          lira_pure_chance_pdf = lira_pure_chance_pdf)}) #length(unique(D_test$rating))
       # time test this.
       #library(microbenchmark)
