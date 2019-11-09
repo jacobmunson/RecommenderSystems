@@ -1,5 +1,7 @@
 library(readr)
 D1 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set1.csv")
+D1_test <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set1_test.csv")
+
 D2 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set2.csv")
 D3 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set3.csv")
 D4 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set4.csv")
@@ -7,6 +9,9 @@ D5 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark
 
 library(dplyr)
 D = bind_rows(D1,D2,D3,D4,D5)
+
+D = bind_rows(D1,D1_test)
+D %>% filter(Method == 'kNN' & `Similarity Measure` == "LiRa - Uniform") %>% group_by(k) %>% summarize(first(MAE) - last(MAE))
 
 D = D %>% group_by(`Similarity Measure`, Method, k) %>% summarize(MAE_mu = mean(MAE))
 
