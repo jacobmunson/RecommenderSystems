@@ -47,3 +47,15 @@ Pearson Correlation - IZ,    kNN, 10, 0.8168377, 0.8153674, 0.0018
 LiRa - Uniform,    kNN, 10, 0.7700735, 0.7686874, 0.0018
 LiRa - Gaussian,    kNN, 10, 0.8205883, 0.8191113, 0.0018
 LiRa - LogGaussian,    kNN, 10, 0.8205883, 0.8191113, 0.0018
+Cosine Similarity, NN-RST, 15, 0.8092897,  0.807833, 0.0018
+Pearson Correlation - PWC, NN-RST, 15, 0.8455344, 0.8440124, 0.0018
+Pearson Correlation - IZ, NN-RST, 15,   0.85256, 0.8510253, 0.0018
+LiRa - Uniform, NN-RST, 15, 1.0221571, 1.0203172, 0.0018
+LiRa - Gaussian, NN-RST, 15, 0.8129676, 0.8115042, 0.0018
+LiRa - LogGaussian, NN-RST, 15, 0.9230992, 0.9214376, 0.0018
+Cosine Similarity,    kNN, 15, 0.8098729, 0.8084152, 0.0018
+Pearson Correlation - PWC,    kNN, 15, 0.8153811, 0.8139134, 0.0018
+Pearson Correlation - IZ,    kNN, 15, 0.8103872, 0.8089285, 0.0018
+LiRa - Uniform,    kNN, 15, 0.7695003, 0.7681152, 0.0018
+LiRa - Gaussian,    kNN, 15, 0.8120235, 0.8105619, 0.0018
+LiRa - LogGaussian,    kNN, 15, 0.8120235, 0.8105619, 0.0018
