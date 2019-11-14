@@ -16,6 +16,10 @@ d = length(V) # number of unique values
 lira_pure_chance_pdf = lira_pure_chance_distribution(V = V)
 lira_same_cluster_pdf = lira_same_cluster_distribution(V = V)
 
+lira_binary_pure_chance_pdf = lira_binary_pure_chance_distribution()
+lira_binary_same_cluster_pdf = lira_binary_same_cluster_distribution()
+
+
 #####################################
 # Numerically Doing the Same Things #
 #####################################
