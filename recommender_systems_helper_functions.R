@@ -109,6 +109,50 @@ lira_same_cluster_distribution = function(V){
   
 }
 
+lira_binary_pure_chance_distribution = function(V = c(0,1)){
+  V_grid = expand.grid(V, V)
+  V_grid$diff = abs(V_grid$Var1 - V_grid$Var2)
+  
+  if(range(diff(V))[1] != range(diff(V))[2]){
+    warning("Uneven spaced ratings")
+  }
+  
+  stopifnot(sum(table(V_grid$diff)/length(V)^2) == 1)
+  pcd = matrix(table(V_grid$diff)/length(V)^2)
+  rownames(pcd) = c(0,1)
+  colnames(pcd) = "prob"
+  
+  return(pcd)
+}
+
+lira_binary_same_cluster_distribution = function(V = c(0,1)){
+  
+  if(range(diff(V))[1] != range(diff(V))[2]){
+    warning("Uneven spaced ratings")
+  }
+  del0 = (1/2)^(0+1)
+  del1 = (1/2)^(1+1)  
+  
+  scd = c(del0, del1)
+  leftover_prob = 1 - sum(scd)
+  #leftover_prob/length(scd)
+  
+  scd = scd + leftover_prob/length(scd)
+  # d = max(V)
+  # del_max = d - 2
+  # c_del = c()
+  # for(del in 0:del_max){
+  #   #print((1/2)^(del + 1))  
+  #   c_del[del+1] = (1/2)^(del + 1)
+  # }
+  # c_del[del_max+2] = 1 - sum(c_del)
+  stopifnot(sum(scd) == 1)
+  
+  scd = matrix(scd, dimnames = list(c(0,1),"prob"))
+  return(scd)
+  
+}
+
 prediction_evaluation_function = function(train_set, test_set, similarity_vector){
   
   #mae_nn = c(); mae_knn = c()
