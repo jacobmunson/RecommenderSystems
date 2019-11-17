@@ -62,14 +62,36 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
   
   #d = num_ratings
   
-  # pure chance
+  # same cluster
   lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  # pure chance
   lira_top = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
 
   
   lira = log10(lira_top/lira_bottom)
   return(lira)
 }
+
+
+lira_multinomial = function(x_u, x_v, multinomial_pure_chance_pdf, lira_same_cluster_pdf){
+  
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  num_diff = length(diff)
+  
+  y_j = rep(0,nrow(lira_same_cluster_pdf)); #table(diff)
+  y_j[as.numeric(names(table(diff)))+1] = table(diff)
+  
+  # same cluster
+  g_vec_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  # pure chance
+  g_vec_top = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
+  
+  lira_multinomial = log10(g_vec_top/g_vec_bottom)
+  
+  return(lira_multinomial)
+}
+
 
 lira_pure_chance_distribution = function(V){
   V_grid = expand.grid(V, V)
