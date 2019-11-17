@@ -6,8 +6,9 @@ library(doParallel)
 library(ggplot2)
 
 
-D <- read.table("Recommender Systems - Home Folder/ml-100k/u1.base")
-colnames(D) = c("user","item","rating","timestamp")
+# D <- read.table("Recommender Systems - Home Folder/ml-100k/u1.base")
+# colnames(D) = c("user","item","rating","timestamp")
+D = D_train
 
 start = Sys.time()
 iter = 10000
@@ -42,8 +43,7 @@ freq = table(abs(diff_vector))
 freq = as.numeric(freq)
 rating = sort(unique(D$rating), decreasing = F) - 1 
 
-rating_data <- tibble(Rating = as.factor(rating),
-                      Freq = freq)
+rating_data <- tibble(Rating = as.factor(rating),Freq = freq)
 rating_data
 rating_data %>%
   ggplot(aes(x = Rating, y = Freq)) +
