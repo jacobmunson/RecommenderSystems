@@ -61,9 +61,10 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
   #d = num_ratings
   
   # same cluster
-  lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  lira_bottom = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
+    
   # pure chance
-  lira_top = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
+  lira_top = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
 
   
   lira = log10(lira_top/lira_bottom)
@@ -82,7 +83,7 @@ lira_gaussian = function(x_u, x_v){
   num_diff_z = length(diff_z)
   
   # same cluster
-  lira_bottom =  prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(sum(c(2,2)^2))))
+  lira_bottom =  prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(sum(c(3,3)^2))))
   
   # pure chance
   lira_top = prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(2)))
