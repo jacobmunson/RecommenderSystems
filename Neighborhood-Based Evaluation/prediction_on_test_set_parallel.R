@@ -316,15 +316,10 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     ## Log LiRa Gaussian Clusters
     
     if(nrow(B) > 1){
-
-      B_lira_gauss_log = lapply(1:nrow(B),
-                                FUN = function(k){x_u = B[which(rownames(B) == D_test_i$user),];
-                                x_v = B[k,];
-                                (diff = x_u - x_v);
-                                n = length(diff);v = var(diff, na.rm = TRUE);
-                                #sqrt(n/2)*(v/v_pop - 1 - log(v/v_pop))
-                                log10(v_pop/v)
-                                })
+      
+      B_lira_gauss_log = lapply(1:nrow(B), FUN = function(k){lira_gaussian(x_u = B[which(rownames(B) == D_test_i$user),], 
+                                                                           x_v = B[k,], sd_sc = 1, sd_pc = 3)})
+      
 
       B_lira_gauss_log = bind_cols(B_lira_gauss_log)
       colnames(B_lira_gauss_log) = rownames(B)
@@ -427,10 +422,14 @@ end - start # 1.02
 head(sim_matrix, n = 15) # visual inspection
 stopifnot(nrow(sim_matrix) == nrow(D_test))
 
-data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,",
-                          "Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,"),
-           method = c(rep("NN-RST,",6),rep("kNN,",6)),
-           k = rep(paste0(K_global,","),12),
+data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", 
+                          "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,",
+                          "LiRa - Binary,", "LiRa - Multinomial,",
+                          "Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", 
+                          "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,",
+                          "LiRa - Binary,", "LiRa - Multinomial,"),
+           method = c(rep("NN-RST,",8),rep("kNN,",8)),
+           k = rep(paste0(K_global,","),16),
            mean = paste0(round(colMeans(sim_matrix, na.rm = TRUE),7),","), 
            adj_mean = paste0(round(colSums(sim_matrix, na.rm = T)/nrow(sim_matrix),7),","), 
            pct_na = rbind(round(length(which(is.na(sim_matrix[,"mae_cs_nn"])))/nrow(sim_matrix),7),
@@ -439,12 +438,16 @@ data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pe
                           round(length(which(is.na(sim_matrix[,"mae_lu_nn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_lg_nn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_lg_log_nn"])))/nrow(sim_matrix),7),
+                          round(length(which(is.na(sim_matrix[,"mae_lu_bin_nn"])))/nrow(sim_matrix),7),
+                          round(length(which(is.na(sim_matrix[,"mae_lmn_nn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_cs_knn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_pc_pwc_knn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_pc_iz_knn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_lu_knn"])))/nrow(sim_matrix),7),
                           round(length(which(is.na(sim_matrix[,"mae_lg_knn"])))/nrow(sim_matrix),7),
-                          round(length(which(is.na(sim_matrix[,"mae_lg_log_knn"])))/nrow(sim_matrix),7))
+                          round(length(which(is.na(sim_matrix[,"mae_lg_log_knn"])))/nrow(sim_matrix),7),
+                          round(length(which(is.na(sim_matrix[,"mae_lu_bin_knn"])))/nrow(sim_matrix),7),
+                          round(length(which(is.na(sim_matrix[,"mae_lmn_knn"])))/nrow(sim_matrix),7))
 )
 
 data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,","LiRa - Binary", "LiRa - Multinomial,",
