@@ -60,11 +60,11 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
   
   #d = num_ratings
   
-  # same cluster
-  lira_bottom = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
-    
   # pure chance
-  lira_top = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+
+  # same cluster
+  lira_top = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
 
   
   lira = log10(lira_top/lira_bottom)
