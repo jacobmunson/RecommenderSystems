@@ -70,6 +70,8 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
 
 dnorm_diff <- function(x, mu, sigma){sqrt(2 / pi) / sigma * cosh(x * mu / sigma^2) * exp(-(x^2 + mu^2)/(2*sigma^2))}
 
+
+# Lira gaussian variants 
 lira_gaussian = function(x_u, x_v, sd_sc, sd_pc){
   
   z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
@@ -115,6 +117,37 @@ lira_gaussian = function(x_u, x_v, sd_sc, lira_pure_chance_pdf){
   
   return(lira)
 }
+
+lira_gaussian = function(x_u, x_v, sd_pc, lira_same_cluster_pdf){
+  
+  z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
+  z_v = (x_v - mean(x_v, na.rm = T))/sd(x_v, na.rm = T)
+  
+  
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  num_diff = length(diff)
+  diff_z = abs(z_u - z_v)
+  diff_z = diff_z[!is.na(diff_z)]
+  num_diff_z = length(diff_z)
+  
+  # same cluster
+  #lira_top = prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(sum(c(sd_sc,sd_sc)^2))))
+  lira_top = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
+  
+  # pure chance
+  lira_bottom = prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(sum(c(sd_pc,sd_pc)^2))))
+  
+  # pure chance
+  #lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  
+  
+  lira = log10((lira_top/lira_bottom))
+  
+  return(lira)
+}
+
+
 
 lira_multinomial = function(x_u, x_v, multinomial_pure_chance_pdf, lira_same_cluster_pdf){
   
