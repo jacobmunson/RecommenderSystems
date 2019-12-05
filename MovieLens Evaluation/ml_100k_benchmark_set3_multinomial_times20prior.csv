@@ -1,4 +1,4 @@
-	Similarity Measure, Method, k, MAE, MAE_NA, %NA
+Similarity Measure, Method, k, MAE, MAE_NA, %NA
 Cosine Similarity, NN-RST, 3, 0.8776832, 0.8761034, 0.00180
 Pearson Correlation - PWC, NN-RST, 3, 0.9109262,  0.909241, 0.00185
 Pearson Correlation - IZ, NN-RST, 3, 0.9091394,  0.907503, 0.00180
