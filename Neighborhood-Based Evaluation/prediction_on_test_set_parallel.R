@@ -67,7 +67,10 @@ rm(diff_vector) # pretty long, so let's remove it
 
 ## Setting k for kNN 
 # To-do: make this a vector and process all smaller k at same time
-K_global = 10 # 3,5,7,10,15,20,30,40,50,60,80,160
+K_global = 3  # 3,5,7,10,15,20,30,40,50,60,80,160
+#sd_sc = 0.25; 
+sd_pc = 2
+
 ## Start Evaluation
 rm(sim_matrix);gc() # 
 start = Sys.time()
@@ -318,7 +321,9 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
     if(nrow(B) > 1){
       
       B_lira_gauss_log = lapply(1:nrow(B), FUN = function(k){lira_gaussian(x_u = B[which(rownames(B) == D_test_i$user),], 
-                                                                           x_v = B[k,], sd_sc = 1, sd_pc = 3)})
+                                                                           x_v = B[k,], 
+                                                                           sd_pc = sd_pc, 
+                                                                           lira_same_cluster_pdf = lira_same_cluster_pdf)})
       
 
       B_lira_gauss_log = bind_cols(B_lira_gauss_log)
@@ -423,10 +428,10 @@ head(sim_matrix, n = 15) # visual inspection
 stopifnot(nrow(sim_matrix) == nrow(D_test))
 
 data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", 
-                          "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,",
+                          "LiRa - Uniform,","LiRa - Gaussian,","LiRa - Gaussian1,",
                           "LiRa - Binary,", "LiRa - Multinomial,",
                           "Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", 
-                          "LiRa - Uniform,","LiRa - Gaussian,","LiRa - LogGaussian,",
+                          "LiRa - Uniform,","LiRa - Gaussian,","LiRa - Gaussian1,",
                           "LiRa - Binary,", "LiRa - Multinomial,"),
            method = c(rep("NN-RST,",8),rep("kNN,",8)),
            k = rep(paste0(K_global,","),16),
