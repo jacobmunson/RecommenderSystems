@@ -95,3 +95,51 @@ LiRa - Gaussian,    kNN, 20, 0.8108339, 0.8093744, 0.00180
 LiRa - Gaussian1,    kNN, 20,  0.768994, 0.7676098, 0.00180
 LiRa - Binary,    kNN, 20, 0.2247682, 0.2243636, 0.00180
 LiRa - Multinomial,    kNN, 20, 0.7734906, 0.7709768, 0.00325
+Cosine Similarity, NN-RST, 30, 0.8032542, 0.8018083, 0.00180
+Pearson Correlation - PWC, NN-RST, 30, 0.9025154, 0.9007104, 0.00200
+Pearson Correlation - IZ, NN-RST, 30,  0.839579, 0.8380677, 0.00180
+LiRa - Uniform, NN-RST, 30, 1.2513885,  1.249136, 0.00180
+LiRa - Gaussian, NN-RST, 30, 0.8058431, 0.8043926, 0.00180
+LiRa - Gaussian1, NN-RST, 30, 1.4536752, 1.4510586, 0.00180
+LiRa - Binary, NN-RST, 30, 0.2272352, 0.2268262, 0.00180
+LiRa - Multinomial, NN-RST, 30, 6.5415593, 6.5202992, 0.00325
+Cosine Similarity,    kNN, 30, 0.8037355, 0.8022888, 0.00180
+Pearson Correlation - PWC,    kNN, 30, 0.8069158,  0.805302, 0.00200
+Pearson Correlation - IZ,    kNN, 30, 0.8023914, 0.8009471, 0.00180
+LiRa - Uniform,    kNN, 30, 0.7740471, 0.7726538, 0.00180
+LiRa - Gaussian,    kNN, 30, 0.8065454, 0.8050936, 0.00180
+LiRa - Gaussian1,    kNN, 30, 0.7725828, 0.7711921, 0.00180
+LiRa - Binary,    kNN, 30, 0.2299889, 0.2295749, 0.00180
+LiRa - Multinomial,    kNN, 30, 0.7775094, 0.7749825, 0.00325
+Cosine Similarity, NN-RST, 40, 0.8039822, 0.8025351, 0.00180
+Pearson Correlation - PWC, NN-RST, 40, 0.9417611, 0.9398776, 0.00200
+Pearson Correlation - IZ, NN-RST, 40, 0.8400832,  0.838571, 0.00180
+LiRa - Uniform, NN-RST, 40, 1.4093056, 1.4067688, 0.00180
+LiRa - Gaussian, NN-RST, 40, 0.8037922, 0.8023454, 0.00180
+LiRa - Gaussian1, NN-RST, 40, 1.6637296, 1.6607349, 0.00180
+LiRa - Binary, NN-RST, 40, 0.2309641, 0.2305484, 0.00180
+LiRa - Multinomial, NN-RST, 40,  6.685075, 6.6633485, 0.00325
+Cosine Similarity,    kNN, 40, 0.8050535, 0.8036044, 0.00180
+Pearson Correlation - PWC,    kNN, 40,   0.80538, 0.8037693, 0.00200
+Pearson Correlation - IZ,    kNN, 40, 0.8031563, 0.8017107, 0.00180
+LiRa - Uniform,    kNN, 40, 0.7779184, 0.7765182, 0.00180
+LiRa - Gaussian,    kNN, 40, 0.8054063, 0.8039565, 0.00180
+LiRa - Gaussian1,    kNN, 40,   0.77604, 0.7746432, 0.00180
+LiRa - Binary,    kNN, 40, 0.2336608, 0.2332403, 0.00180
+LiRa - Multinomial,    kNN, 40, 0.7822651, 0.7797227, 0.00325
+Cosine Similarity, NN-RST, 50, 0.8042399, 0.8027923, 0.00180
+Pearson Correlation - PWC, NN-RST, 50, 0.9855922,  0.983621, 0.00200
+Pearson Correlation - IZ, NN-RST, 50, 0.8408396, 0.8393261, 0.00180
+LiRa - Uniform, NN-RST, 50, 1.5728725, 1.5700413, 0.00180
+LiRa - Gaussian, NN-RST, 50, 0.8031186,  0.801673, 0.00180
+LiRa - Gaussian1, NN-RST, 50, 1.8684557, 1.8650925, 0.00180
+LiRa - Binary, NN-RST, 50, 0.2338127, 0.2333918, 0.00180
+LiRa - Multinomial, NN-RST, 50, 6.7764847, 6.7544611, 0.00325
+Cosine Similarity,    kNN, 50,  0.805556,  0.804106, 0.00180
+Pearson Correlation - PWC,    kNN, 50, 0.8048963, 0.8032865, 0.00200
+Pearson Correlation - IZ,    kNN, 50, 0.8039041,  0.802457, 0.00180
+LiRa - Uniform,    kNN, 50, 0.7814186,  0.780012, 0.00180
+LiRa - Gaussian,    kNN, 50, 0.8053594, 0.8039097, 0.00180
+LiRa - Gaussian1,    kNN, 50, 0.7801984,  0.778794, 0.00180
+LiRa - Binary,    kNN, 50, 0.2362927, 0.2358674, 0.00180
+LiRa - Multinomial,    kNN, 50, 0.7862766, 0.7837212, 0.00325
