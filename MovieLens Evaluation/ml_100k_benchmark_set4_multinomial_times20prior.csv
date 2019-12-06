@@ -49,3 +49,33 @@ Pearson Correlation - PWC,    kNN, 15, 0.8097479, 0.8086142, 0.00140
 Pearson Correlation - IZ,    kNN, 15, 0.8020092, 0.8009265, 0.00135
 LiRa - Uniform,    kNN, 15, 0.7652329, 0.7641999, 0.00135
 LiRa - Multinomial,    kNN, 15, 0.7696445,  0.767528, 0.00275
+Cosine Similarity, NN-RST, 20, 0.7995966, 0.7985172, 0.00135
+Pearson Correlation - PWC, NN-RST, 20, 0.8615412,  0.860335, 0.00140
+Pearson Correlation - IZ, NN-RST, 20, 0.8333189, 0.8321939, 0.00135
+LiRa - Uniform, NN-RST, 20, 1.0844487, 1.0829847, 0.00135
+LiRa - Multinomial, NN-RST, 20, 6.2301755, 6.2130425, 0.00275
+Cosine Similarity,    kNN, 20, 0.8006374, 0.7995565, 0.00135
+Pearson Correlation - PWC,    kNN, 20, 0.8051173, 0.8039902, 0.00140
+Pearson Correlation - IZ,    kNN, 20, 0.7996135,  0.798534, 0.00135
+LiRa - Uniform,    kNN, 20, 0.7651069,  0.764074, 0.00135
+LiRa - Multinomial,    kNN, 20, 0.7698655, 0.7677484, 0.00275
+Cosine Similarity, NN-RST, 30, 0.7977849, 0.7967079, 0.00135
+Pearson Correlation - PWC, NN-RST, 30, 0.8887469, 0.8875026, 0.00140
+Pearson Correlation - IZ, NN-RST, 30, 0.8319546, 0.8308314, 0.00135
+LiRa - Uniform, NN-RST, 30, 1.2531108, 1.2514191, 0.00135
+LiRa - Multinomial, NN-RST, 30, 6.4986897, 6.4808183, 0.00275
+Cosine Similarity,    kNN, 30, 0.7993081, 0.7982291, 0.00135
+Pearson Correlation - PWC,    kNN, 30, 0.8002976, 0.7991772, 0.00140
+Pearson Correlation - IZ,    kNN, 30, 0.7979079, 0.7968307, 0.00135
+LiRa - Uniform,    kNN, 30,  0.767592, 0.7665557, 0.00135
+LiRa - Multinomial,    kNN, 30,  0.773373, 0.7712462, 0.00275
+Cosine Similarity, NN-RST, 40,  0.797877, 0.7967998, 0.00135
+Pearson Correlation - PWC, NN-RST, 40, 0.9233428, 0.9220501, 0.00140
+Pearson Correlation - IZ, NN-RST, 40, 0.8330207, 0.8318961, 0.00135
+LiRa - Uniform, NN-RST, 40, 1.4212973, 1.4193786, 0.00135
+LiRa - Multinomial, NN-RST, 40, 6.6518492, 6.6335566, 0.00275
+Cosine Similarity,    kNN, 40, 0.7998716, 0.7987918, 0.00135
+Pearson Correlation - PWC,    kNN, 40, 0.7997285, 0.7986088, 0.00140
+Pearson Correlation - IZ,    kNN, 40, 0.7988515,  0.797773, 0.00135
+LiRa - Uniform,    kNN, 40, 0.7719401,  0.770898, 0.00135
+LiRa - Multinomial,    kNN, 40, 0.7773928,  0.775255, 0.00275
