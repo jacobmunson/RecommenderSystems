@@ -71,3 +71,4 @@ LiRa - Multinomial, NN-RST, 30, 3.6896599, 3.6785909, 0.00300
 Cosine Similarity,    kNN, 30, 0.8170906, 0.8157832, 0.00160
 Pearson Correlation - PWC,    kNN, 30,  0.814005, 0.8125805, 0.00175
 LiRa - Multinomial,    kNN, 30,  0.793949, 0.7915672, 0.00300
+
