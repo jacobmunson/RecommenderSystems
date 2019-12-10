@@ -1,6 +1,7 @@
 library(readr)
 D1 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set1.csv")
 D1_test <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set1_test.csv")
+D1_test <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set1_multinomial.csv")
 
 D2 <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set2.csv")
 D2_test <- read_csv("GitHub/RecommenderSystems/MovieLens Evaluation/ml_100k_benchmark_set2_test.csv")
