@@ -163,7 +163,7 @@ lira_multinomial = function(x_u, x_v, multinomial_pure_chance_pdf, lira_same_clu
   # pure chance
   g_vec_top = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
   
-  lira_multinomial = log10(g_vec_top/g_vec_bottom)
+  lira_multinomial = log10(g_vec_bottom/g_vec_top)
   
   return(lira_multinomial)
 }
