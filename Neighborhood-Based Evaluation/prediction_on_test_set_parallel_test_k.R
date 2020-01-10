@@ -23,10 +23,10 @@ source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functio
 
  
   
-D <- read_csv("Documents/ml-latest-small/ml-latest-small/ratings.csv")
-colnames(D) = c("user","item","rating","timestamp")
-dim(D)
-head(D)
+# D <- read_csv("Documents/ml-latest-small/ml-latest-small/ratings.csv")
+# colnames(D) = c("user","item","rating","timestamp")
+# dim(D)
+# head(D)
 
 set.seed(2)
 
@@ -376,7 +376,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
                             })
       
       B_lira_lrt = bind_cols(B_lira_lrt)
-      colnames(B_lira_lrt) = rownames(B_gauss)
+      colnames(B_lira_lrt) = rownames(B_lira_lrt)
       B_lira_lrt = as.matrix(B_lira_lrt)
       B_lira_lrt = B_lira_lrt[,order(B_lira_lrt, decreasing = TRUE)]
       B_lira_lrt = B_lira_lrt[-1]
@@ -426,7 +426,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
       B_lira_gauss = bind_cols(B_lira_gauss)
       colnames(B_lira_gauss) = rownames(B)
       B_lira_gauss = as.matrix(B_lira_gauss)
-      B_lira_gauss = B_lira_gauss_log[,order(B_lira_gauss, decreasing = TRUE)]
+      B_lira_gauss = B_lira_gauss[,order(B_lira_gauss, decreasing = TRUE)]
       B_lira_gauss = B_lira_gauss[-1]
 
 
