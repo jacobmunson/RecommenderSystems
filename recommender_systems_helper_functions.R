@@ -71,6 +71,17 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
 dnorm_diff <- function(x, mu, sigma){sqrt(2 / pi) / sigma * cosh(x * mu / sigma^2) * exp(-(x^2 + mu^2)/(2*sigma^2))}
 
 
+# Lira LRT Variant
+lira_lrt = function(x_u, x_v, sd_pop){
+  (diff = (x_u - x_v))
+  #n = length(diff);
+  sd_diff = sd(diff, na.rm = TRUE)
+  #sqrt(n/2)*(v/v_pop - 1 - log(v/v_pop))
+  
+  return(sd_pop/sd_diff)
+}
+
+
 # Lira gaussian variants 
 lira_gaussian = function(x_u, x_v, sd_sc, sd_pc){
   
