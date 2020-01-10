@@ -46,9 +46,6 @@ dirichlet_prior_values <- freq/sum(freq)*20#
 multinomial_parameter_values <- rating_data$Freq/sum(rating_data$Freq)
 updated_multinomial_parameter_values <- dirichlet_prior_values + multinomial_parameter_values
 
-
-
-#l_vec = c(); g_vec = c()
 alpha_star = updated_multinomial_parameter_values
 #lira_pure_chance_pdf = lira_pure_chance_distribution(V = seq(1:5))
 
