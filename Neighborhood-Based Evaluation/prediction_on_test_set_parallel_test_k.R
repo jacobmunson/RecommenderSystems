@@ -17,23 +17,24 @@ source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functio
 #D = matrix(data = as.numeric(unlist(strsplit(D, "\\s+"))), ncol = 4, byrow = TRUE) # filling in matrix
 #head(D) # visual check
 #dim(D) # how many? 
-#colnames(D) = c("user","item","rating","timestamp")
 #head(D)
 #D = as_tibble(D)
 
- 
-  
-# D <- read_csv("Documents/ml-latest-small/ml-latest-small/ratings.csv")
-# colnames(D) = c("user","item","rating","timestamp")
-# dim(D)
-# head(D)
+
+
+D <- read_csv("Documents/ml-latest-small/ml-latest-small/ratings.csv")
+colnames(D) = c("user","item","rating","timestamp")
+
+lira_same_cluster_pdf = lira_same_cluster_distribution(V = sort(unique(D$rating))) 
+lira_pure_chance_pdf = lira_pure_chance_distribution(V = sort(unique(D$rating))) 
+lira_binary_same_cluster_pdf = lira_binary_same_cluster_distribution()
+lira_binary_pure_chance_pdf = lira_binary_pure_chance_distribution()
+
+train_index = sample(x = 1:nrow(D), size = 0.8*nrow(D), replace = F)
+D_train = D[train_index,]
+D_test = D[-train_index,]
 
 set.seed(2)
-
-test = sample(x = seq(1,nrow(D),1), size = 0.20*nrow(D), replace = FALSE) #33098 - 50000 /  91924 - 100000
-D_test = D[test,]
-D_train = D[-test,]
-nrow(D_test) + nrow(D_train) == nrow(D)
 
 nrow(D_test)
 nrow(D_train)
@@ -70,11 +71,7 @@ rm(diff_vector) # pretty long, so let's remove it
 #K_global = 3  # 3,5,7,10,15,20,30,40,50,60,80,160
 K = c(3,5,7,10,15,20,30,40,50,60,80,160)
 
-# set K = c(3,5,7,10,15,20,30,40,50,60,80,160)
-# set K_max = max(K)
-# inside of each loop 
-
-sd_pc = 2
+sd_pc = 4
 
 ## Start Evaluation
 rm(sim_matrix);gc() # 
@@ -541,7 +538,8 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
 stopCluster(cl);# dim(M)
 end = Sys.time()
 end - start # 1.02
-sim_matrix
+
+dim(sim_matrix)
 head(sim_matrix, n = 15) # visual inspection
 stopifnot(nrow(sim_matrix) == nrow(D_test)*length(K))
 
@@ -549,12 +547,35 @@ sim_matrix %>% group_by(sim, K) %>% summarize(MAE_nn = mean(ae_nn, na.rm = T)) %
 sim_matrix %>% select(k_current) %>% unique()
 
 sim_matrix %>% 
-  group_by(sim, K) %>% filter(sim != "lira_bin") %>%
+  group_by(sim, K) %>% filter(sim != "lira_bin", sim != "lira_mn") %>%
   summarize(MAE_nn = mean(ae_knn, na.rm = T)) %>% #ungroup() %>% 
   ggplot(aes(x = K, y = MAE_nn, group = `sim`, color = `sim`)) + 
   geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1)
 
 
+
+D_ml_latest_1 = sim_matrix # sd_pc = 2
+D_ml_latest_2 = sim_matrix # sd_pc = 2
+
+
+
+
+D1 = sim_matrix
+D2 = sim_matrix
+D3 = sim_matrix
+D4 = sim_matrix
+D5 = sim_matrix
+
+D_total = bind_rows(D1,D2,D3,D4,D5)
+str(D_total)
+
+D_total %>% 
+  group_by(K, sim) %>% 
+  filter(sim != "lira_bin", sim != "lira_mn") %>% 
+  summarize(MAE = mean(ae_knn, na.rm = T)) %>%
+  ggplot(aes(x = K, y = MAE, group = `sim`, color = `sim`)) + geom_line() + geom_point()
+
+###################################
 
 data.frame(similarity = c("Cosine Similarity,","Pearson Correlation - PWC,", "Pearson Correlation - IZ,", 
                           "LiRa - Uniform,","LiRa - Gaussian,","LiRa - Gaussian1,",
