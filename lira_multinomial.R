@@ -5,9 +5,6 @@ library(reshape2)
 library(doParallel)
 library(ggplot2)
 
-
-# D <- read.table("Recommender Systems - Home Folder/ml-100k/u1.base")
-# colnames(D) = c("user","item","rating","timestamp")
 D = D_train
 
 start = Sys.time()
@@ -30,23 +27,16 @@ table(abs(diff_vector))/sum(table(abs(diff_vector)))
 end = Sys.time()
 print(end - start)
 
-
 freq = table(abs(diff_vector))
 freq = as.numeric(freq)
 rating = sort(unique(D$rating), decreasing = F) - 1 
 
 rating_data <- tibble(Rating = as.factor(rating),Freq = freq)
-rating_data
-# rating_data %>%
-#   ggplot(aes(x = Rating, y = Freq)) +
-#   geom_col()
-
 
 dirichlet_prior_values <- freq/sum(freq)*20#
 multinomial_parameter_values <- rating_data$Freq/sum(rating_data$Freq)
 updated_multinomial_parameter_values <- dirichlet_prior_values + multinomial_parameter_values
 
 alpha_star = updated_multinomial_parameter_values
-#lira_pure_chance_pdf = lira_pure_chance_distribution(V = seq(1:5))
 
 
