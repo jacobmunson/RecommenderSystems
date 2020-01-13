@@ -202,7 +202,7 @@ lira_same_cluster_distribution = function(V){
     warning("Uneven spaced ratings")
   }
   
-  d = max(V)
+  d = length(V) # changed from max(V) to work with non-integer ratings
   del_max = d - 2
   c_del = c()
   for(del in 0:del_max){
