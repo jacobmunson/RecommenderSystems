@@ -69,8 +69,10 @@ D %>% group_by(user) %>% #filter(user == 2) %>%
   left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
   arrange(user) %>% select(user, genres) %>% print(n = 20)
 
-genres = c(D_movies %>% select(genres) %>% unique() %>% .$genres, "N") #%>% nrow() # 951 unique
 
+# Genre movements
+# How do users float around genres?
+genres = c(D_movies %>% select(genres) %>% unique() %>% .$genres, "N") #%>% nrow() # 951 unique
 genre_matrix = matrix(data = 0, nrow = length(genres), ncol = length(genres), dimnames = list(genres, genres))
 str(genre_matrix)
 genre_transitions = D %>% group_by(user) %>% #filter(user == 2) %>%
@@ -92,20 +94,30 @@ for(i in 1:nrow(genre_transitions)){
   print(i)
 }
 
-
-genre_transitions[232,]
-str(genre_matrix)
-
-genre_matrix[1,]
-
 genre_matrix = genre_matrix/rowSums(genre_matrix)
-
-genre_matrix[1,]
-
-
 rowSums(genre_matrix)
 
+i = 2
+rownames(genre_matrix)[i]
+A = sort(genre_matrix[i,], decreasing = T)
+A[which(A > 0)][1:10]
+
+# Additional idea: break up compound genres and make a transition from all components to all component of the next genre
+
+# Ratings 
+D %>% select(user, rating) %>% 
+  group_by(user) %>% 
+  summarize(mu = mean(rating), sd = sd(rating)) %>% 
+  ggplot(aes(x = mu)) + geom_density()
+
+D %>% select(user, rating) %>% 
+  group_by(user) %>% 
+  summarize(mu = mean(rating), sd = sd(rating)) %>% 
+  ggplot(aes(x = sd)) + geom_density()
+
+
 # Everything
+# User,item,rating,timestamp,title,genres,tag
 D %>% group_by(user) %>% 
   arrange(timestamp) %>% 
   ungroup() %>% 
@@ -123,8 +135,7 @@ length(unique(unlist(lapply(1:length(l), FUN = function(i){strsplit(l[[i]], spli
 
 
 #################
-
-# reshaping benchmarks - skip - just putting here for records
+# reshaping benchmarks - skip - just putting here for records right now
 library(reshape2)
 library(microbenchmark)
 microbenchmark(
@@ -138,5 +149,3 @@ microbenchmark(
 microbenchmark(
   M = D %>% filter(user %in% (D_item %>% .$user)) %>% select(user, item, rating) %>% spread(item, rating)#, item == item_pred)
 )
-
-# start here
