@@ -61,17 +61,52 @@ D %>% #arrange(user) %>%
   scale_x_continuous(limits = c(0, 100000), oob = squish) + ggtitle(label = "IETs", subtitle = "Aggregate per User")
 
 
-
-
-
+# For Genre Exploration
 D %>% group_by(user) %>% #filter(user == 2) %>%
   arrange(timestamp) %>% 
   ungroup() %>% 
   left_join(y = D_movies,by = c("item" = "movieId")) %>% 
   left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
-  arrange(user) %>% select(user, genres) %>% unique() %>% print(n = 20)
+  arrange(user) %>% select(user, genres) %>% print(n = 20)
 
-D %>% group_by(user) %>% #filter(user == 2) %>%
+genres = c(D_movies %>% select(genres) %>% unique() %>% .$genres, "N") #%>% nrow() # 951 unique
+
+genre_matrix = matrix(data = 0, nrow = length(genres), ncol = length(genres), dimnames = list(genres, genres))
+str(genre_matrix)
+genre_transitions = D %>% group_by(user) %>% #filter(user == 2) %>%
+  arrange(timestamp) %>% 
+  ungroup() %>% 
+  left_join(y = D_movies,by = c("item" = "movieId")) %>% 
+  left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
+  arrange(user) %>% 
+  select(user, genres) %>% 
+  group_by(user) %>% 
+  mutate(next_genre = lead(genres))
+genre_transitions$next_genre = genre_transitions$next_genre %>% replace_na("N")
+
+
+
+for(i in 1:nrow(genre_transitions)){
+  genre_matrix[as.character(genre_transitions[i,"genres"]),as.character(genre_transitions[i,"next_genre"])] = 
+    genre_matrix[as.character(genre_transitions[i,"genres"]),as.character(genre_transitions[i,"next_genre"])] + 1
+  print(i)
+}
+
+
+genre_transitions[232,]
+str(genre_matrix)
+
+genre_matrix[1,]
+
+genre_matrix = genre_matrix/rowSums(genre_matrix)
+
+genre_matrix[1,]
+
+
+rowSums(genre_matrix)
+
+# Everything
+D %>% group_by(user) %>% 
   arrange(timestamp) %>% 
   ungroup() %>% 
   left_join(y = D_movies,by = c("item" = "movieId")) %>% 
@@ -79,11 +114,11 @@ D %>% group_by(user) %>% #filter(user == 2) %>%
   arrange(user)
 
 
-D_movies %>% select(genres) %>% unique() %>% nrow()
+D_movies %>% select(genres) %>% unique() %>% nrow() # 951 unique
 l = D_movies %>% select(genres) %>% unique()
 l = c(l)
 unique(unlist(lapply(1:length(l), FUN = function(i){strsplit(l[[i]], split = "[|]")})))
-
+length(unique(unlist(lapply(1:length(l), FUN = function(i){strsplit(l[[i]], split = "[|]")})))) # 20 unique when split up
 
 
 
