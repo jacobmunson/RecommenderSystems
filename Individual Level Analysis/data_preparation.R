@@ -96,6 +96,29 @@ D %>% group_by(user) %>% #filter(user == 2) %>%
   left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
   arrange(user) %>% select(user, genres) %>% print(n = 20)
 
+# maybe edit this to decompose composite genres
+D %>% group_by(user) %>% #filter(user == 2) %>%
+  arrange(timestamp) %>% 
+  ungroup() %>% 
+  left_join(y = D_movies,by = c("item" = "movieId")) %>% 
+  left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
+  arrange(user) %>% select(user, genres) %>% 
+  unique() %>% 
+  group_by(user) %>% 
+  summarize(unique_genres = n()) %>% 
+  left_join(user_age, by = "user") %>% 
+  select(genre_count = unique_genres, age = lifetime_days, events) %>%
+  ggplot(aes(x = genre_count, y = age, color = events)) + 
+  geom_point(size = 2) + scale_fill_gradient(low = ("red"), high = muted("blue"), aesthetics = "color", space = "Lab")
+
+
+D %>% group_by(user) %>% filter(user == 2) %>%
+  arrange(timestamp) %>% 
+  ungroup() %>% 
+  left_join(y = D_movies,by = c("item" = "movieId")) %>% 
+  left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
+  arrange(user) %>% select(user, genres)
+
 
 # Genre movements
 # How do users float around genres?
