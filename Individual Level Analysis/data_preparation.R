@@ -60,6 +60,33 @@ D %>% #arrange(user) %>%
   geom_density() + 
   scale_x_continuous(limits = c(0, 100000), oob = squish) + ggtitle(label = "IETs", subtitle = "Aggregate per User")
 
+# User IETs
+user_iet = D %>% 
+  group_by(user) %>% 
+  arrange(timestamp) %>% 
+  ungroup() %>% 
+  arrange(user) %>% 
+  select(user, timestamp) %>% # data readme says "Timestamps represent seconds since midnight Coordinated Universal Time (UTC) of January 1, 1970."
+  group_by(user) %>%
+  mutate(timestamp_lag = lag(timestamp), timestamp_diff = timestamp - timestamp_lag) %>% 
+  select(user, timestamp_diff) %>% na.omit() %>% group_by(user) %>% summarize(IET_mu = mean(timestamp_diff))
+
+
+# User Age
+user_age = D %>% 
+  group_by(user) %>% 
+  arrange(timestamp) %>% 
+  summarize(events = n(), lifetime_sec = last(timestamp) - first(timestamp)) %>% 
+  mutate(lifetime_days = lifetime_sec/(60*60*24))
+
+user_age$events[user_age$events > 200] = 200 # to make visual better
+
+# Plotting age against IET
+left_join(user_iet, user_age, by = "user") %>% 
+  mutate(IET_days = IET_mu/(60*60*24)) %>% 
+  ggplot(aes(x = IET_days, y = lifetime_days, color = events)) + 
+  geom_point(size = 2) + scale_fill_gradient(low = ("red"), high = muted("blue"), aesthetics = "color", space = "Lab")
+
 
 # For Genre Exploration
 D %>% group_by(user) %>% #filter(user == 2) %>%
@@ -114,6 +141,20 @@ D %>% select(user, rating) %>%
   group_by(user) %>% 
   summarize(mu = mean(rating), sd = sd(rating)) %>% 
   ggplot(aes(x = sd)) + geom_density()
+
+D %>% select(user, rating) %>% 
+  group_by(user) %>% 
+  mutate(next_rating = lead(rating), rating_diff = rating - next_rating) %>% 
+  group_by(user) %>% 
+  summarize(mu_diff = mean(rating_diff, na.rm = T), sd_diff = sd(rating_diff, na.rm = T)) %>%
+  ggplot(aes(x = mu_diff)) + geom_density() # and sd_diff
+
+D %>% select(user, rating) %>% 
+  group_by(user) %>% 
+  mutate(next_rating = lead(rating), rating_diff = rating - next_rating) %>% 
+  group_by(user) %>% 
+  summarize(mu_diff = mean(rating_diff, na.rm = T), sd_diff = sd(rating_diff, na.rm = T)) %>%
+  ggplot(aes(x = mu_diff)) + geom_density() # and sd_diff
 
 
 # Everything
