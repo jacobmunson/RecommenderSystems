@@ -1,9 +1,6 @@
 ## Relevant Packages
 library(dplyr)
-library(readr)
 library(reshape2)
-library(doParallel)
-library(ggplot2)
 
 D = D_train
 
@@ -33,10 +30,7 @@ rating = sort(unique(D$rating), decreasing = F) - 1
 
 rating_data <- tibble(Rating = as.factor(rating),Freq = freq)
 
-dirichlet_prior_values <- freq/sum(freq)*20#
+amplication_factor = 20
+dirichlet_prior_values <- freq/sum(freq)*amplication_factor
 multinomial_parameter_values <- rating_data$Freq/sum(rating_data$Freq)
-updated_multinomial_parameter_values <- dirichlet_prior_values + multinomial_parameter_values
-
-alpha_star = updated_multinomial_parameter_values
-
-
+alpha_star = dirichlet_prior_values + multinomial_parameter_values
