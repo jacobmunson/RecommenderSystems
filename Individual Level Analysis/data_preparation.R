@@ -87,6 +87,29 @@ left_join(user_iet, user_age, by = "user") %>%
   ggplot(aes(x = IET_days, y = lifetime_days, color = events)) + 
   geom_point(size = 2) + scale_fill_gradient(low = ("red"), high = muted("blue"), aesthetics = "color", space = "Lab")
 
+# Mean/sd Ratings by user with lifetime
+D %>% group_by(user) %>% 
+  summarize(mu_rating = mean(rating), sd_rating = sd(rating), lifetime_sec = last(timestamp) - first(timestamp)) %>% 
+  mutate(lifetime_days = lifetime_sec/(60*60*24)) %>% 
+  ggplot(aes(x = mu_rating, y = sd_rating, color = lifetime_days)) + 
+  geom_point() + 
+  ggtitle(label = "mean and sd of ratings by user") + scale_fill_gradient(low = ("red"), high = muted("blue"), aesthetics = "color", space = "Lab")
+
+# Mean/sd Ratings by user with event counts
+D %>% group_by(user) %>% 
+  summarize(mu_rating = mean(rating), sd_rating = sd(rating), events = as.numeric(n())) %>% 
+  mutate(events = if_else(events > 200, 200, events)) %>% 
+  #mutate(lifetime_days = lifetime_sec/(60*60*24)) %>% 
+  ggplot(aes(x = mu_rating, y = sd_rating, color = events)) + 
+  geom_point() + 
+  ggtitle(label = "mean and sd of ratings by user", subtitle = "capped at 200") + 
+  scale_fill_gradient(low = ("green"), high = muted("red"), aesthetics = "color", space = "Lab")
+
+
+
+
+
+
 
 # For Genre Exploration
 D %>% group_by(user) %>% #filter(user == 2) %>%
