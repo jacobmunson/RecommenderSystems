@@ -160,7 +160,7 @@ lira_gaussian = function(x_u, x_v, sd_pc, lira_same_cluster_pdf){
 
 
 
-lira_multinomial = function(x_u, x_v, multinomial_pure_chance_pdf, lira_same_cluster_pdf){
+lira_multinomial = function(x_u, x_v, alpha_star, lira_same_cluster_pdf){
   
   diff = abs(x_u - x_v)
   diff = diff[!is.na(diff)]
@@ -170,11 +170,14 @@ lira_multinomial = function(x_u, x_v, multinomial_pure_chance_pdf, lira_same_clu
   y_j[as.numeric(names(table(diff)))+1] = table(diff)
   
   # same cluster
-  g_vec_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
-  # pure chance
-  g_vec_top = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
+  g_vec_sc = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
+  #g_vec_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
   
-  lira_multinomial = log10(g_vec_bottom/g_vec_top)
+  # pure chance
+  g_vec_pc = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  #g_vec_top = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
+  
+  lira_multinomial = log10(g_vec_sc/g_vec_pc) #log10(g_vec_bottom/g_vec_top)
   
   return(lira_multinomial)
 }
