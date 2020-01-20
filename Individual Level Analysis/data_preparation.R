@@ -15,6 +15,7 @@ D_links = read_csv("Recommender Systems - Home Folder/ml-latest-small-100k/links
 #D %>% filter(user == 2) %>% arrange(timestamp) %>% left_join(y = D_movies,by = c("item" = "movieId"))
 
 # For IET Exploration
+library(tidyverse)
 library(lubridate)
 library(scales)
 
@@ -236,3 +237,55 @@ microbenchmark(
 microbenchmark(
   M = D %>% filter(user %in% (D_item %>% .$user)) %>% select(user, item, rating) %>% spread(item, rating)#, item == item_pred)
 )
+#################
+
+
+
+
+D_test = D %>% select(user, item,rating) %>% spread(item, rating) %>% select(-user)
+
+str(D_test)
+dim(D_test)
+
+D_test[1:5,1:5]
+
+
+D_test_cor = cor(D_test, use = "pairwise.complete.obs")
+
+item_names = D %>% select(item) %>% unique() %>% .$item
+
+colnames(D_test_cor) = item_names
+rownames(D_test_cor) = item_names
+
+dim(D_test_cor)
+str(D_test_cor)
+
+D_test_cor[1:5,1:5]
+
+D %>% select(user) %>% unique()
+
+Dx = D %>% group_by(user) %>%
+  #filter(user == 2) %>%
+  arrange(timestamp) %>% 
+  select(item) %>% 
+  mutate(next_item = as.character(lead(item)), item = as.character(item)) %>% slice(1:(n()- 1)) %>%  
+  rowwise() %>% mutate(item_sim = D_test_cor[item,next_item])
+
+
+D_1 %>% tail(10)
+
+D_1 %>% head(10) %>% rowwise() %>% mutate(item_sim = if_else(!is.na(next_item), true = D_test_cor[item,next_item], false = NULL))
+D_1 %>% rowwise() %>% mutate(item_sim = D_test_cor[item,next_item])
+
+  
+D_test_cor["318",2]
+D_test_cor["318","79132"]
+D_test_cor["79132",2]
+
+
+
+
+
+D_test_cor
+
+
