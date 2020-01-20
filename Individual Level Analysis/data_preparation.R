@@ -240,7 +240,7 @@ microbenchmark(
 #################
 
 
-
+# Item-by-item similarity
 
 D_test = D %>% select(user, item,rating) %>% spread(item, rating) %>% select(-user)
 
@@ -271,8 +271,10 @@ Dx = D %>% group_by(user) %>%
   mutate(next_item = as.character(lead(item)), item = as.character(item)) %>% slice(1:(n()- 1)) %>%  
   rowwise() %>% mutate(item_sim = D_test_cor[item,next_item])
 
+Dx %>% filter(user == 1) %>% .$item_sim
 
-D_1 %>% tail(10)
+
+Dx %>% group_by(user) %>% filter(user == 1) %>% mutate(x = 1:n()) %>% ggplot(aes(x = x,y = item_sim, color = user)) + geom_line()
 
 D_1 %>% head(10) %>% rowwise() %>% mutate(item_sim = if_else(!is.na(next_item), true = D_test_cor[item,next_item], false = NULL))
 D_1 %>% rowwise() %>% mutate(item_sim = D_test_cor[item,next_item])
