@@ -108,10 +108,6 @@ D %>% group_by(user) %>%
 
 
 
-
-
-
-
 # For Genre Exploration
 D %>% group_by(user) %>% #filter(user == 2) %>%
   arrange(timestamp) %>% 
@@ -160,8 +156,6 @@ genre_transitions = D %>% group_by(user) %>% #filter(user == 2) %>%
   mutate(next_genre = lead(genres))
 genre_transitions$next_genre = genre_transitions$next_genre %>% replace_na("N")
 
-
-
 for(i in 1:nrow(genre_transitions)){
   genre_matrix[as.character(genre_transitions[i,"genres"]),as.character(genre_transitions[i,"next_genre"])] = 
     genre_matrix[as.character(genre_transitions[i,"genres"]),as.character(genre_transitions[i,"next_genre"])] + 1
@@ -178,16 +172,25 @@ A[which(A > 0)][1:10]
 
 # Additional idea: break up compound genres and make a transition from all components to all component of the next genre
 
-# Ratings 
+###############
+### Ratings ###
+###############
+
+# Mean Rating density 
 D %>% select(user, rating) %>% 
   group_by(user) %>% 
   summarize(mu = mean(rating), sd = sd(rating)) %>% 
   ggplot(aes(x = mu)) + geom_density()
-
+# SD Rating Density
 D %>% select(user, rating) %>% 
   group_by(user) %>% 
   summarize(mu = mean(rating), sd = sd(rating)) %>% 
   ggplot(aes(x = sd)) + geom_density()
+# Mean and SD
+D %>% select(user, rating) %>% 
+  group_by(user) %>% 
+  summarize(mu = mean(rating), sd = sd(rating)) %>% 
+  ggplot(aes(x = mu, y = sd)) + geom_point() #density()
 
 D %>% select(user, rating) %>% 
   group_by(user) %>% 
@@ -202,6 +205,13 @@ D %>% select(user, rating) %>%
   group_by(user) %>% 
   summarize(mu_diff = mean(rating_diff, na.rm = T), sd_diff = sd(rating_diff, na.rm = T)) %>%
   ggplot(aes(x = mu_diff)) + geom_density() # and sd_diff
+
+D %>% select(user, rating) %>% 
+  group_by(user) %>% 
+  mutate(next_rating = lead(rating), rating_diff = rating - next_rating) %>% 
+  group_by(user) %>% 
+  summarize(mu_diff = mean(rating_diff, na.rm = T), sd_diff = sd(rating_diff, na.rm = T)) %>%
+  ggplot(aes(x = mu_diff, y = sd_diff)) + geom_point() #density() # and sd_diff
 
 
 # Everything
@@ -213,10 +223,10 @@ D %>% group_by(user) %>%
   left_join(y = D_tags,by = c("item" = "movieId", "user" = "userId", "timestamp" = "timestamp")) %>% 
   arrange(user)
 
-
 D_movies %>% select(genres) %>% unique() %>% nrow() # 951 unique
 l = D_movies %>% select(genres) %>% unique()
 l = c(l)
+# Break up genres
 unique(unlist(lapply(1:length(l), FUN = function(i){strsplit(l[[i]], split = "[|]")})))
 length(unique(unlist(lapply(1:length(l), FUN = function(i){strsplit(l[[i]], split = "[|]")})))) # 20 unique when split up
 
@@ -267,33 +277,95 @@ Dx = D %>% group_by(user) %>%
   arrange(timestamp) %>% 
   select(item) %>% 
   mutate(next_item = as.character(lead(item)), item = as.character(item)) %>% slice(1:(n()- 1)) %>%  
-  rowwise() %>% mutate(item_sim = D_test_cor[item,next_item])
+  rowwise() %>% mutate(item_sim = D_test_cor[item,next_item]) %>% ungroup()
 
-Dx %>% filter(user == 1) #%>% .$item_sim
+Dx_diff = Dx %>% group_by(user) %>% #filter(user == 2) %>% 
+  #select(user, item_sim) %>% 
+  mutate(lead_item_sim = lead(item_sim), sim_diff = item_sim - lead_item_sim) %>% na.omit()
 
-Dx %>% group_by(user) %>% filter(user == 2) %>% mutate(x = 1:n()) %>% ggplot(aes(x = x,y = item_sim, color = user)) + geom_line()
+Dx_diff %>% 
+  group_by(user) %>% 
+  mutate(count = seq(1:n())) %>% 
+  ggplot(aes(x = count, y = sim_diff, col = user)) + geom_line()
+
+
+
+
+
+# Single user similarity difference by item-by-item
+Dx_diff %>% group_by(user) %>% 
+  filter(user == 1) %>% 
+  mutate(x = 1:n()) %>% 
+  ggplot(aes(x = x, y = sim_diff, color = user)) + geom_line()
 
 # Variance in item similarity
-Dx %>% group_by(user) %>% filter(user == 1) %>% summarize(var_item_sim = var(item_sim, na.rm = T))
-Dx %>% group_by(user) %>% filter(user == 2) %>% summarize(var_item_sim = var(item_sim, na.rm = T))
-Dx %>% group_by(user) %>% filter(user == 3) %>% summarize(var_item_sim = var(item_sim, na.rm = T))
+Dx_diff %>% group_by(user) %>% 
+  summarize(var_sim_diff = var(sim_diff, na.rm = T), mean_sim_diff = mean(sim_diff, na.rm = T))
 
-Dx %>% group_by(user) %>% 
-  summarize(var_item_sim = var(item_sim, na.rm = T)) %>% arrange(var_item_sim) %>% select(user, var_item_sim) %>%
-  ggplot(aes(x = user, y = var_item_sim)) + geom_point()
+Dx_diff %>% group_by(user) %>% 
+  summarize(var_sim_diff = var(sim_diff, na.rm = T), mean_sim_diff = mean(sim_diff, na.rm = T)) %>% 
+  ggplot(aes(x = user, y = var_sim_diff)) + geom_point()
 
-Dx %>% group_by(user) %>% 
-  summarize(var_item_sim = var(item_sim, na.rm = T)) %>% 
-  arrange(var_item_sim) %>% select(user, var_item_sim) %>%
-  ggplot(aes(x = seq(1:610), y = var_item_sim)) + geom_point(size = 0.01)
+Dx_diff %>% group_by(user) %>% 
+  summarize(var_sim_diff = var(sim_diff, na.rm = T), mean_sim_diff = mean(sim_diff, na.rm = T)) %>% 
+  arrange(var_sim_diff) %>% select(user, var_sim_diff) %>%
+  ggplot(aes(x = seq(1:length(unique(Dx_diff$user))), y = var_sim_diff)) + geom_point()
 
-Dx %>% group_by(user) %>% 
-  summarize(var_item_sim = var(item_sim, na.rm = T)) %>% 
-  arrange(var_item_sim) %>% 
-  select(user, var_item_sim) %>%
-  mutate(user = as.factor(user)) %>%
-  ggplot(aes(x = user, y = var_item_sim)) + geom_point(size = 0.01) #+ scale_x_reverse()
+Dx_diff %>% group_by(user) %>% 
+  summarize(var_sim_diff = var(sim_diff, na.rm = T), mean_sim_diff = mean(sim_diff, na.rm = T)) %>% 
+  ggplot(aes(x = seq(1:length(unique(Dx_diff$user))), y = mean_sim_diff)) + geom_point()
 
 
-Dx %>% filter(user == 1) %>% select(item_sim) %>% na.omit() %>% .$item_sim
+# Mean and Var against each other, scaled and mean-centered
+Dx_diff %>% group_by(user) %>% 
+  summarize(var_sim_diff = var(sim_diff, na.rm = T), 
+            mean_sim_diff = mean(sim_diff, na.rm = T)) %>% 
+  mutate(var_sim_diff_scaled = (var_sim_diff - mean(var_sim_diff, na.rm = T))/sd(var_sim_diff, na.rm = T), 
+         mean_sim_diff_scaled = (mean_sim_diff - mean(mean_sim_diff, na.rm = T))/sd(mean_sim_diff, na.rm = T)) %>% 
+  #summarize(mean(var_sim_diff_scaled, na.rm = T), mean(mean_sim_diff_scaled, na.rm = T)) %>%
+  ggplot(aes(x = mean_sim_diff_scaled, y = var_sim_diff_scaled)) + geom_point()
+
+
+user_i = 1
+Dx_diff %>% filter(user == user_i) %>% mutate(x = 1:n()) %>% ggplot(aes(x = x, y = sim_diff)) + geom_point() + geom_line()
+
+#Dx_diff %>% 
+
+Dx_diff %>% 
+  mutate(item = as.numeric(item), next_item = as.numeric(next_item)) %>% 
+  filter(user == 3) %>% 
+  inner_join(D_movies, by = c("item" = "movieId")) %>%
+  inner_join(D_movies, by = c("next_item" = "movieId")) %>% 
+  select(sim_diff, genres.x, genres.y)
+
+#D_movies
+
+
+user_i_sim_data = Dx_diff %>% filter(user == user_i) %>% mutate(x = 1:n())
+
+plot(density(user_i_sim_data$sim_diff))
+plot(user_i_sim_data$sim_diff, type = 'l')
+
+var(user_i_sim_data$sim_diff)
+
+user_i_sim_data$sim_diff
+
+
+
+km = kmeans(user_i_sim_data$sim_diff, centers = 2)
+plot(user_i_sim_data$sim_diff, col = km$cluster)
+
+cor(user_i_sim_data$sim_diff)
+
+
+
+Dx %>% filter(user == user_i) %>% select(item_sim) %>% na.omit() %>% .$item_sim
+sum(Dx %>% filter(user == user_i) %>% select(item_sim) %>% na.omit() %>% .$item_sim)/2
+
+user_items = D %>% group_by(user) %>%
+  filter(user == user_i) %>%
+  arrange(timestamp) %>% 
+  select(item) %>% .$item
+
+
 
