@@ -21,11 +21,11 @@ source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functio
 #D = as_tibble(D)
 
 
-D <- read_csv("Documents/ml-latest-small/ml-latest-small/ratings.csv")
+D <- read_csv("~/Documents/ml-latest-small/ml-latest-small/ratings.csv")
 colnames(D) = c("user","item","rating","timestamp")
 
-lira_same_cluster_pdf = lira_same_cluster_distribution(V = sort(unique(D$rating))) 
-lira_pure_chance_pdf = lira_pure_chance_distribution(V = sort(unique(D$rating))) 
+lira_same_cluster_pdf = lira_same_cluster_distribution(V = sort(unique(D_train$rating))) 
+lira_pure_chance_pdf = lira_pure_chance_distribution(V = sort(unique(D_train$rating))) 
 lira_binary_same_cluster_pdf = lira_binary_same_cluster_distribution()
 lira_binary_pure_chance_pdf = lira_binary_pure_chance_distribution()
 
@@ -84,13 +84,11 @@ cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","reshape2")) %dopar% {
 
   k_error_df_total = c()
-  
-  #print(i)
-  #i = 1
+
   D_subset =  D_test[shards[[i]],]
 
   for(j in 1:nrow(D_subset)){
-    #print(j)
+    #print(j) # j = 8
     D_test_i = D_subset[j,]
     
     potential_coraters = D_train %>% filter(D_train$item == D_test_i$item) %>% select(user)
@@ -106,183 +104,30 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
       k_error_df_lirau = data.frame(K, k_current = NA, sim = "lirau", ae_nn = NA, ae_knn = NA)
       if(nrow(B) > 1){
         
-        B_lirau = lapply(1:nrow(B), FUN = function(k){lira(x_u = B[which(rownames(B) == D_test_i$user),], 
-                                                           x_v = B[k,], 
-                                                           lira_same_cluster_pdf = lira_same_cluster_pdf, 
-                                                           lira_pure_chance_pdf = lira_pure_chance_pdf)}) #length(unique(D_test$rating))
-        # time test this.
-        #library(microbenchmark)
-        #B_lirau = do.call(cbind.data.frame, B_lirau)
-        #bind
-        B_lirau = bind_cols(B_lirau)
-        
-        colnames(B_lirau) = rownames(B)
-        
-        #order(B_lirau, decreasing = T)# %>% arrange()
-        #arrange(desc(B_lirau))
-        B_lirau = as.matrix(B_lirau)
-        #B_lirau = as.matrix.data.frame(B_lirau[order(B_lirau, decreasing = TRUE)])
-        B_lirau = B_lirau[,order(B_lirau, decreasing = TRUE)]
-        
-        B_lirau = B_lirau[-1]
-        B_lirau = B_lirau[is.finite(B_lirau)]
-        
+        B_lirau = compute_neighbor_similarity(user_item_matrix = B, test_observation = D_test_i)
+        B_lirau = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = B_lirau)
         
         # columns: k, k_current, ae_nn, ae_knn
         # dimensions: K * 4
         for(k in 1:length(K)){
           k_current = min(length(B_lirau), K[k])
+          k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
           k_error_df_lirau[k,"k_current"] = k_current
           #B_lirau = B_lirau[1:k_current]
           
           pred_lirau = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lirau[1:k_current])
-          # pred_pc_pwc is one obs from test set
-          k_error_df_lirau[k,"ae_nn"] = pred_lirau[1] # to store entries 1 and 2
+          k_error_df_lirau[k,"ae_nn"] = pred_lirau[1]
           k_error_df_lirau[k,"ae_knn"] = pred_lirau[2]
-          ###mae_pc_pwc_nn[j] = pred_pc_pwc[1];
-          ###mae_pc_pwc_knn[j] = pred_pc_pwc[2];
-          
         }
-        
-        
-        # K = min(length(B_lirau),K_global)
-        # B_lirau = B_lirau[1:K]
-        # 
-        # pred_lu = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lirau)
-        # mae_lu_nn[j] = pred_lu[1]; 
-        # mae_lu_knn[j] = pred_lu[2];
-        #if(any(is.na(B_lirau)) & length(B_lirau) == 1){mae_lu_nn[j] = NA; mae_lu_knn[j] = NA}else{
-        
-        ##### Prediction f()
-        
       }
       k_error_df_total = rbind(k_error_df_total, k_error_df_lirau)
       
-      ## LiRa Uniform Similarity
-      k_error_df_lirau_test = data.frame(K, k_current = NA, sim = "lirau_test", ae_nn = NA, ae_knn = NA)
-      if(nrow(B) > 1){
-        
-        B_lirau = lapply(1:nrow(B), FUN = function(k){lira(x_u = B[which(rownames(B) == D_test_i$user),], 
-                                                           x_v = B[k,], 
-                                                           lira_same_cluster_pdf = lira_same_cluster_pdf, 
-                                                           lira_pure_chance_pdf = lira_pure_chance_pdf)}) #length(unique(D_test$rating))
-        # time test this.
-        #library(microbenchmark)
-        #B_lirau = do.call(cbind.data.frame, B_lirau)
-        #bind
-        B_lirau = bind_cols(B_lirau)
-        
-        colnames(B_lirau) = rownames(B)
-        
-        #order(B_lirau, decreasing = T)# %>% arrange()
-        #arrange(desc(B_lirau))
-        B_lirau = as.matrix(B_lirau)
-        #B_lirau = as.matrix.data.frame(B_lirau[order(B_lirau, decreasing = TRUE)])
-        B_lirau = B_lirau[,order(B_lirau, decreasing = TRUE)]
-        
-        B_lirau = B_lirau[-1]
-        B_lirau = B_lirau[is.finite(B_lirau)]
-        
-
-        
-        
-        # columns: k, k_current, ae_nn, ae_knn
-        # dimensions: K * 4
-        for(k in 1:length(K)){
-          k_current = min(length(B_lirau), K[k])
-          
-          B_lirau_in_k = B_lirau[1:k_current]
-          
-          B_lirau_in_k = B_lirau_in_k[B_lirau_in_k > mu_scale*mean(B_lirau_in_k)]
-          B_lirau_in_k = B_lirau_in_k[is.finite(B_lirau_in_k)]
-          
-          k_error_df_lirau_test[k,"k_current"] = length(B_lirau_in_k)
-          #B_lirau = B_lirau[1:k_current]
-          
-          pred_lirau = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lirau_in_k)
-          # pred_pc_pwc is one obs from test set
-          k_error_df_lirau_test[k,"ae_nn"] = pred_lirau[1] # to store entries 1 and 2
-          k_error_df_lirau_test[k,"ae_knn"] = pred_lirau[2]
-          ###mae_pc_pwc_nn[j] = pred_pc_pwc[1];
-          ###mae_pc_pwc_knn[j] = pred_pc_pwc[2];
-          
-        }
-        
-        
-        # K = min(length(B_lirau),K_global)
-        # B_lirau = B_lirau[1:K]
-        # 
-        # pred_lu = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lirau)
-        # mae_lu_nn[j] = pred_lu[1]; 
-        # mae_lu_knn[j] = pred_lu[2];
-        #if(any(is.na(B_lirau)) & length(B_lirau) == 1){mae_lu_nn[j] = NA; mae_lu_knn[j] = NA}else{
-        
-        ##### Prediction f()
-        
-      }
-      k_error_df_total = rbind(k_error_df_total, k_error_df_lirau_test)
-      
-      
-
-      ## LiRa Gaussian Clusters
-      #k_error_df_lira_gauss = data.frame(K, k_current = NA, sim = "lira_gauss", ae_nn = NA, ae_knn = NA)
-      if(FALSE){
-        
-        B_lira_gauss = lapply(1:nrow(B), FUN = function(k){lira_gaussian(x_u = B[which(rownames(B) == D_test_i$user),], 
-                                                                         x_v = B[k,], 
-                                                                         sd_pc = sd_pc, 
-                                                                         lira_same_cluster_pdf = lira_same_cluster_pdf)})
-        
-        
-        B_lira_gauss = bind_cols(B_lira_gauss)
-        colnames(B_lira_gauss) = rownames(B)
-        B_lira_gauss = as.matrix(B_lira_gauss)
-        B_lira_gauss = B_lira_gauss[,order(B_lira_gauss, decreasing = TRUE)]
-        B_lira_gauss = B_lira_gauss[-1]
-        
-        
-        
-        
-        B_lira_gauss = B_lira_gauss[is.finite(B_lira_gauss)]
-        
-        for(k in 1:length(K)){
-          k_current = min(length(B_lira_gauss), K[k])
-          k_error_df_lira_gauss[k,"k_current"] = k_current
-          #B_lira_gauss = B_lira_gauss[1:k_current]
-          
-          pred_lira_gauss = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lira_gauss[1:k_current])
-          # pred_pc_pwc is one obs from test set
-          k_error_df_lira_gauss[k,"ae_nn"] = pred_lira_gauss[1] # to store entries 1 and 2
-          k_error_df_lira_gauss[k,"ae_knn"] = pred_lira_gauss[2]
-          ###mae_pc_pwc_nn[j] = pred_pc_pwc[1];
-          ###mae_pc_pwc_knn[j] = pred_pc_pwc[2];
-          
-        }
-        
-        
-        # K = min(length(B_lira_gauss_log),K_global)
-        # B_lira_gauss_log = B_lira_gauss_log[1:K]
-        # 
-        # pred_log_lg = prediction_evaluation_function(train_set = D_train, test_set = D_test_i, similarity_vector = B_lira_gauss_log)
-        # mae_lg_log_nn[j] = pred_log_lg[1];
-        # mae_lg_log_knn[j] = pred_log_lg[2];
-        
-        ####### Prediction f()
-        
-        
-      } # nrow(B) > 1
-      #k_error_df_total = rbind(k_error_df_total, k_error_df_lira_gauss)
-      
-
     }
     
     
   }
   
-
   k_error_df_total
-  # k_error_df_total
-  #}
   
 }
 
