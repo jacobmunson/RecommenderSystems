@@ -335,5 +335,54 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
 }
 
 
-
+compute_neighbor_similarity = function(user_item_matrix, test_observation, similarity_measure){
+  similarity_matrix = matrix(data = NA, nrow = 1, ncol = nrow(user_item_matrix))
+  
+  if(similarity_measure == "lira_uniform"){
+    for(u in 1:nrow(user_item_matrix)){
+      similarity_matrix[1,u] = lira(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+                                    x_v = user_item_matrix[u,], 
+                                    lira_same_cluster_pdf = lira_same_cluster_pdf, 
+                                    lira_pure_chance_pdf = lira_pure_chance_pdf)
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
+  }
+  
+  if(similarity_measure == "lira_gaussian_pure_chance"){
+    for(u in 1:nrow(user_item_matrix)){
+      similarity_matrix[1,u] = lira_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+                                             x_v = user_item_matrix[u,], 
+                                             lira_same_cluster_pdf = lira_same_cluster_pdf, 
+                                             sd_pc = sd_pc)
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
+  }
+  
+  
+  if(similarity_measure == "pearson_pwc"){
+    similarity_matrix = cor(t(user_item_matrix), use = "pairwise.complete.obs")
+    similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
+  }
+  
+  
+  if(similarity_measure == "pearson_impute_zero"){
+    user_item_matrix[is.na(user_item_matrix)] = 0
+    similarity_matrix = cor(t(user_item_matrix))
+    similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
+  }
+  
+  if(similarity_measure == "cosine"){
+    user_item_matrix[is.na(user_item_matrix)] = 0
+    similarity_matrix = cosine_similarity(matrix = user_item_matrix)
+    similarity_matrix[is.nan(similarity_matrix)] = 0
+    similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
+    
+  }
+  
+  
+  
+  
+  
+  return(similarity_matrix)
+}
 
