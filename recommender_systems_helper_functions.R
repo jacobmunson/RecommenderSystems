@@ -278,6 +278,62 @@ prediction_evaluation_function = function(train_set, test_set, similarity_vector
     pred_rating_knn = mean(neighbor_ratings$rating)
     mae_knn = abs(pred_rating_knn - test_set$rating)
   }
-  return(c(mae_nn, mae_knn))
+  return(c(mae_nn, mae_knn)) # weighted, unweighted
 }
+
+nearest_neighbors_trimming_function = function(similarity_vector_with_self_similarity, 
+                                               positive_only = F, scale_similarity_by_max = F, normalize_similarity = F,
+                                               min_similarity = NA, mean_scaling = F, sd_scaling = F,
+                                               mu_scale = NA, sd_scale = NA){
+  
+  sv = similarity_vector_with_self_similarity
+  sv = sv[,order(sv, decreasing = TRUE)]
+  sv = sv[-1]
+  
+  if(positive_only){sv = sv[sv > 0]}
+  
+  if(scale_similarity_by_max){sv = sv/max(sv)}
+  if(normalize_similarity){sv = (sv - mean(sv))/sd(sv)}  
+  
+  if(is.numeric(min_similarity)){
+    if(any(sv) > min_similarity){
+      
+      if(mean_scaling | sd_scaling){
+        if(mean_scaling & sd_scaling){
+          stopifnot(is.numeric(mu_scale))
+          stopifnot(is.numeric(sd_scale))
+          sv = sv[sv > mu_scale*mean(sv) + sd_scale*sd(sv)]
+        }else{
+          sv = sv[sv > mu_scale*mean(sv)]
+        }
+      }
+      
+      
+      
+      # operations on vector but only if there's meeting of a threshold  
+    }
+    
+  }else{
+    
+    if(mean_scaling | sd_scaling){
+      if(mean_scaling & sd_scaling){
+        stopifnot(is.numeric(mu_scale))
+        stopifnot(is.numeric(sd_scale))
+        sv = sv[sv > mu_scale*mean(sv) + sd_scale*sd(sv)]
+      }else{
+        sv = sv[sv > mu_scale*mean(sv)]
+      }
+    }
+    
+    
+  }
+  
+  
+  sv = sv[is.finite(sv)]
+  
+  return(sv)
+}
+
+
+
 
