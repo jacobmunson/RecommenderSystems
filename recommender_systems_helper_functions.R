@@ -265,7 +265,7 @@ lira_binary_same_cluster_distribution = function(V = c(0,1)){
 }
 
 prediction_evaluation_function = function(train_set, test_set, similarity_vector){
-  
+  similarity_vector = similarity_vector[!is.na(similarity_vector)]
   #mae_nn = c(); mae_knn = c()
   if(length(similarity_vector) == 0 | any(is.na(similarity_vector))){mae_nn = NA; mae_knn = NA}else{
     
@@ -285,7 +285,6 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
                                                positive_only = F, scale_similarity_by_max = F, normalize_similarity = F,
                                                min_similarity = NA, mean_scaling = F, sd_scaling = F,
                                                mu_scale = NA, sd_scale = NA){
-  
   sv = similarity_vector_with_self_similarity
   sv = sv[,order(sv, decreasing = TRUE)]
   sv = sv[-1]
@@ -376,7 +375,7 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     similarity_matrix = cosine_similarity(matrix = user_item_matrix)
     similarity_matrix[is.nan(similarity_matrix)] = 0
     similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
-    
+    similarity_matrix = t(similarity_matrix) # just for formatting where this gets consumed elsewhere
   }
   
   
