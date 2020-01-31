@@ -57,13 +57,13 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
   diff = abs(x_u - x_v)
   diff = diff[!is.na(diff)]
   num_diff = length(diff)
-  
+  diff_table = table(diff)
   # same cluster
-  lira_top = prod(lira_same_cluster_pdf[names(table(diff)),]^table(diff))
+  lira_top = prod(lira_same_cluster_pdf[names(diff_table),]^diff_table)
   
   # pure chance
-  lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
-
+  lira_bottom = prod(lira_pure_chance_pdf[names(diff_table),]^diff_table)
+  
   lira = log10(lira_top/lira_bottom)
   return(lira)
 }
@@ -73,12 +73,12 @@ dnorm_diff <- function(x, mu, sigma){sqrt(2 / pi) / sigma * cosh(x * mu / sigma^
 
 # Lira LRT Variant
 lira_lrt = function(x_u, x_v, sd_pop){
-  (diff = (x_u - x_v))
+  diff = (x_u - x_v)
   #n = length(diff);
   sd_diff = sd(diff, na.rm = TRUE)
   #sqrt(n/2)*(v/v_pop - 1 - log(v/v_pop))
   
-  return(sd_pop/sd_diff)
+  return((sd_pop/sd_diff)) # ^n
 }
 
 
@@ -389,5 +389,34 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
   
   
   return(similarity_matrix)
+}
+
+lira_lrt_sd_sampling = function(dataset, iter){
+  
+  if(!("tidyverse" %in% (.packages()))){
+    library(tidyverse) 
+  }
+  if(!("reshape2" %in% (.packages()))){
+    library(tidyverse) 
+  }
+  
+  diff_vector = c()
+  start = Sys.time()
+  for(i in 1:iter){
+    user_pair = sample(x = unique(dataset$user), size = 2, replace = FALSE)
+    user_pair_data = dataset %>% filter(user == user_pair[1] | user == user_pair[2])
+    user_pair_matrix = dcast(data = user_pair_data, formula = user ~ item, value.var = "rating")
+    user_pair_matrix = user_pair_matrix[,-1]
+    diff_vector = c(diff_vector,as.numeric(user_pair_matrix[1,] - user_pair_matrix[2,]))
+    
+  }
+  end = Sys.time()
+  print(end - start)
+  
+  sd_pop = sd((diff_vector), na.rm = TRUE)
+  print(sd_pop)
+  
+  return(sd_pop)
+  
 }
 
