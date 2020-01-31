@@ -2,7 +2,7 @@
 # Examining how many new users rate an item through time
 # A proxy for "is this item more/less popular through time?"
 # Could give an indication of stale content, recommendable items, etc 
-
+library(tidyverse)
 
 # Larger data sets (or else this isn't super interesting)
 ratings <- read.table("~/Recommender Systems - Home Folder/ml-1m/ratings.dat")
@@ -37,6 +37,9 @@ D_temp = D %>% mutate(date  = as.Date(as.POSIXct(timestamp, origin="1970-01-01")
 head(D_temp)
 
 D_temp %>% 
-  filter(item == 44) %>%  # 44, 39, 32, 260, 356, 3578, 2762 - some interesting items
-  ggplot(aes(x = date, y = num_users)) + geom_point() + ggtitle(label = "acquisition plots - jolo style")
+  filter(item == 356) %>%  # 44, 39, 32, 260, 356, 3578, 2762 - some interesting items
+  ggplot(aes(x = date, y = num_users)) + 
+  geom_point() + # geom_line()
+  geom_hline(yintercept = 0) + geom_linerange(aes(x = date, ymax = num_users, ymin = 0)) + 
+  ggtitle(label = "Item-based Acquisition-style plot") + xlab("Date") + ylab("Number of first time users")
 
