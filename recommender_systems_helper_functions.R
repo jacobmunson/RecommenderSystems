@@ -368,12 +368,10 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
   
-  
   if(similarity_measure == "pearson_pwc"){
     similarity_matrix = cor(t(user_item_matrix), use = "pairwise.complete.obs")
     similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
   }
-  
   
   if(similarity_measure == "pearson_impute_zero"){
     user_item_matrix[is.na(user_item_matrix)] = 0
