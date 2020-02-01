@@ -282,9 +282,11 @@ prediction_evaluation_function = function(train_set, test_set, similarity_vector
 }
 
 nearest_neighbors_trimming_function = function(similarity_vector_with_self_similarity, 
-                                               positive_only = F, scale_similarity_by_max = F, normalize_similarity = F,
-                                               min_similarity = NA, mean_scaling = F, sd_scaling = F,
-                                               mu_scale = NA, sd_scale = NA){
+                                               positive_only = F, scale_similarity_by_max = F, 
+                                               normalize_similarity = F,
+                                               min_similarity = NA, 
+                                               mean_scaling = F, sd_scaling = F, quantile_trim = F,
+                                               mu_scale = NA, sd_scale = NA, quantile_scale = NA){
   sv = similarity_vector_with_self_similarity
   sv = sv[,order(sv, decreasing = TRUE)]
   sv = sv[-1]
@@ -292,7 +294,10 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
   if(positive_only){sv = sv[sv > 0]}
   
   if(scale_similarity_by_max){sv = sv/max(sv)}
+  
   if(normalize_similarity){sv = (sv - mean(sv))/sd(sv)}  
+  
+  if(quantile_trim){sv = sv[sv > quantile(sv, probs = quantile_scale)]}
   
   if(is.numeric(min_similarity)){
     if(any(sv) > min_similarity){
