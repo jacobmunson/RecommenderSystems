@@ -1,10 +1,9 @@
 ### User Rating Variability ###
-# 
+# Examining user rating variability
+# Of last N ratings, 
+# Are they rating consistently? 
+# Are they rating poorly? 
 
-
-# Examining how many new users rate an item through time
-# A proxy for "is this item more/less popular through time?"
-# Could give an indication of stale content, recommendable items, etc 
 library(tidyverse)
 
 # Larger data sets (or else this isn't super interesting)
@@ -32,26 +31,50 @@ D_user_ratings %>%
   geom_point() + 
   ggtitle(label = paste("10M dataset - last ", item_back, " ratings"))
 
+## Low mean, low variance - Consistent low raters
 D_user_ratings %>% filter(mu_rating < 1.5, var_rating < 2)
 
 D %>% filter(user == 160) %>% 
   arrange(timestamp) %>% 
   filter(row_number() >= (n() - item_back))
 
-
+## High rating, low variance - Consistent high raters
 D_user_ratings %>% filter(mu_rating > 4, var_rating < 2)
 
 D %>% filter(user == 5) %>% 
   arrange(timestamp) %>% 
   filter(row_number() >= (n() - item_back)) #%>%
 
+## Moderate ratings, very low variance
+D_user_ratings %>% filter(mu_rating > 1.5, mu_rating < 4, var_rating < 1)
 
-D_user_ratings %>% filter(mu_rating < 1.5, var_rating < 2)
-
-D %>% filter(user == 160) %>% 
+D %>% filter(user == 6) %>% 
   arrange(timestamp) %>% 
   filter(row_number() >= (n() - item_back)) #%>%
 
+## Moderate ratings, moderate variance 
+D_user_ratings %>% filter(mu_rating > 1.5, mu_rating < 4, var_rating > 1, var_rating < 4)
+
+D %>% filter(user == 4) %>% 
+  arrange(timestamp) %>% 
+  filter(row_number() >= (n() - item_back)) #%>%
+
+
+
+## Moderate ratings, high variance
+D_user_ratings %>% filter(mu_rating > 1.5, mu_rating < 4, var_rating > 4)
+
+D %>% filter(user == 108) %>% 
+  arrange(timestamp) %>% 
+  filter(row_number() >= (n() - item_back)) #%>%
+
+
+## High ratings, moderate variacne
+D_user_ratings %>% filter(mu_rating > 4, var_rating > 2)
+
+D %>% filter(user == 1108) %>% 
+  arrange(timestamp) %>% 
+  filter(row_number() >= (n() - item_back)) #%>%
 
 
 
