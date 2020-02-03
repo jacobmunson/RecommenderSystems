@@ -297,7 +297,7 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
   
   if(normalize_similarity){sv = (sv - mean(sv))/sd(sv)}  
   
-  if(quantile_trim){sv = sv[sv > quantile(sv, probs = quantile_scale)]}
+  if(quantile_trim){sv = sv[sv > quantile(sv, probs = quantile_scale, na.rm = T)]}
   
   if(is.numeric(min_similarity)){
     if(any(sv) > min_similarity){
