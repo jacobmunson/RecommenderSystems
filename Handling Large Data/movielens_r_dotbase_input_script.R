@@ -1,10 +1,7 @@
-<<<<<<< HEAD
+
 #########################
 #### Mystery Machine ####
 #########################
-=======
-### Mystery Machine ###
->>>>>>> f72cac41d1dab08b539ea7f78a30fbecb5901fd0
 D_train <- read.table("~/Documents/Recommender Systems - Mystery Machine/ml-100k/u1.base")
 colnames(D_train) = c("user","item","rating","timestamp")
 
@@ -13,7 +10,7 @@ colnames(D_test) = c("user","item","rating","timestamp")
 ########################
 
 
-<<<<<<< HEAD
+
 
 ########################
 #### Corner Machine ####
@@ -37,10 +34,11 @@ colnames(D) = c("user","item","rating","timestamp")
 
 ## 100k ML Benchmark
 D_train <- read.table("~/Recommender Systems - Home Folder/ml-100k/u1.base")
-=======
+
+######################
 ### Corner Machine ###
+######################
 D_train <- read.table("~/Recommender Systems - Corner/ml-100k/u1.base")
->>>>>>> f72cac41d1dab08b539ea7f78a30fbecb5901fd0
 colnames(D_train) = c("user","item","rating","timestamp")
 
 D_test <- read.table("~/Recommender Systems - Home Folder/ml-100k/u1.test")
