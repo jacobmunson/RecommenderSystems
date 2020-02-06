@@ -3,13 +3,13 @@
 # Data preparation
 ###########################
 library(readr)
-D = read_csv("Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
+D = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
 colnames(D) = c("user","item","rating","timestamp")
 head(D)
 
-D_movies = read_csv("Recommender Systems - Home Folder/ml-latest-small-100k/movies.csv")
-D_tags = read_csv("Recommender Systems - Home Folder/ml-latest-small-100k/tags.csv")
-D_links = read_csv("Recommender Systems - Home Folder/ml-latest-small-100k/links.csv")
+D_movies = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/movies.csv")
+D_tags = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/tags.csv")
+D_links = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/links.csv")
 
 
 #D %>% filter(user == 2) %>% arrange(timestamp) %>% left_join(y = D_movies,by = c("item" = "movieId"))
@@ -288,8 +288,38 @@ Dx_diff %>%
   mutate(count = seq(1:n())) %>% 
   ggplot(aes(x = count, y = sim_diff, col = user)) + geom_line()
 
+D %>% group_by(user) %>% 
+  arrange(timestamp) %>% 
+  filter(row_number() >= (n() - 10)) %>% 
+  select(item) %>% 
+  mutate(next_item = as.character(lead(item)), item = as.character(item)) %>% slice(1:(n()- 1)) %>%  
+  rowwise() %>% mutate(item_sim = D_test_cor[item,next_item]) %>% ungroup() %>% group_by(user) %>% 
+  summarize(mu_sim = mean(item_sim, na.rm = T), var_sim = var(item_sim, na.rm = T)) %>%
+  ggplot(aes(y = mu_sim, x = var_sim)) + geom_point() + theme_light()
+
+Dx %>% 
+  group_by(user) %>% 
+  summarize(mu_sim = mean(item_sim, na.rm = T), sd_sim = sd(item_sim, na.rm = T)) %>%
+  ggplot(aes(x = mu_sim, y = sd_sim)) + geom_point()
 
 
+
+#### Item "Acquisition" Rates
+
+D %>% mutate(date  = as.Date(as.POSIXct(timestamp, origin="1970-01-01"))) %>% 
+  group_by(item) %>% 
+  select(user, date) %>% 
+  group_by(item, user) %>% 
+  filter(row_number() >= (n() - 1)) %>% 
+  group_by(item, date) %>% 
+  summarize(num_users = n()) %>% 
+  filter(item == 356) %>% 
+  ggplot(aes(x = date, y = num_users)) + geom_point()
+
+D %>% group_by(item) %>% summarize(num_ratings = n()) %>% arrange(desc(num_ratings))
+
+
+# D %>% group_by(user,item) %>% summarize(num = n()) %>% filter(num > 1)
 
 
 # Single user similarity difference by item-by-item
@@ -326,10 +356,9 @@ Dx_diff %>% group_by(user) %>%
   ggplot(aes(x = mean_sim_diff_scaled, y = var_sim_diff_scaled)) + geom_point()
 
 
-user_i = 1
+# Using Entropy
+user_i = 8
 Dx_diff %>% filter(user == user_i) %>% mutate(x = 1:n()) %>% ggplot(aes(x = x, y = sim_diff)) + geom_point() + geom_line()
-
-#Dx_diff %>% 
 
 Dx_diff %>% 
   mutate(item = as.numeric(item), next_item = as.numeric(next_item)) %>% 
@@ -338,24 +367,16 @@ Dx_diff %>%
   inner_join(D_movies, by = c("next_item" = "movieId")) %>% 
   select(sim_diff, genres.x, genres.y)
 
-#D_movies
-
 
 user_i_sim_data = Dx_diff %>% filter(user == user_i) %>% mutate(x = 1:n())
 
-plot(density(user_i_sim_data$sim_diff))
-plot(user_i_sim_data$sim_diff, type = 'l')
-
+#plot(density(user_i_sim_data$sim_diff)); plot(user_i_sim_data$sim_diff, type = 'l')
 var(user_i_sim_data$sim_diff)
+user_i_sim_data$sim_diff = abs(user_i_sim_data$sim_diff)
+sum(user_i_sim_data$sim_diff * log(user_i_sim_data$sim_diff), na.rm = T)
 
-user_i_sim_data$sim_diff
 
 
-
-km = kmeans(user_i_sim_data$sim_diff, centers = 2)
-plot(user_i_sim_data$sim_diff, col = km$cluster)
-
-cor(user_i_sim_data$sim_diff)
 
 
 
