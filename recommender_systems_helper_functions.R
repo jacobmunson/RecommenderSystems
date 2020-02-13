@@ -182,6 +182,38 @@ lira_multinomial = function(x_u, x_v, alpha_star, lira_same_cluster_pdf){
   return(lira_multinomial)
 }
 
+lira_multinomial_gaussian = function(x_u, x_v, alpha_star, lira_same_cluster_pdf){
+  
+  
+  z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
+  z_v = (x_v - mean(x_v, na.rm = T))/sd(x_v, na.rm = T)
+  
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  num_diff = length(diff)
+  
+  diff_z = abs(z_u - z_v)
+  diff_z = diff_z[!is.na(diff_z)]
+  
+  
+  y_j = rep(0,nrow(lira_same_cluster_pdf)); #table(diff)
+  y_j[as.numeric(names(table(diff)))+1] = table(diff)
+  
+  # same cluster
+  g_vec_sc = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
+  
+  # pure chance
+  lira_bottom = prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(sum(c(sd_pc,sd_pc)^2))))
+  
+  
+  lira_mng = log10(g_vec_sc/lira_bottom) #log10(g_vec_bottom/g_vec_top)
+  
+  return(lira_mng)
+}
+
+
+
+
 lira_pure_chance_distribution = function(V){
   V_grid = expand.grid(V, V)
   V_grid$diff = abs(V_grid$Var1 - V_grid$Var2)
