@@ -166,15 +166,16 @@ lira_multinomial = function(x_u, x_v, alpha_star, lira_same_cluster_pdf){
   diff = diff[!is.na(diff)]
   num_diff = length(diff)
   
-  y_j = rep(0,nrow(lira_same_cluster_pdf)); #table(diff)
-  y_j[as.numeric(names(table(diff)))+1] = table(diff)
+  y_j = rep(0,nrow(lira_same_cluster_pdf)); # can replace this with a unique on the D$ratings maybe...
+  diff_table = table(diff)
+  y_j[as.numeric(names(diff_table))+1] = diff_table
   
   # same cluster
   g_vec_sc = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
   #g_vec_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
   
   # pure chance
-  g_vec_pc = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
+  g_vec_pc = prod(lira_pure_chance_pdf[names(diff_table),]^diff_table)
   #g_vec_top = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
   
   lira_multinomial = log10(g_vec_sc/g_vec_pc) #log10(g_vec_bottom/g_vec_top)
@@ -197,7 +198,8 @@ lira_multinomial_gaussian = function(x_u, x_v, alpha_star, lira_same_cluster_pdf
   
   
   y_j = rep(0,nrow(lira_same_cluster_pdf)); #table(diff)
-  y_j[as.numeric(names(table(diff)))+1] = table(diff)
+  diff_table = table(diff)
+  y_j[as.numeric(names(diff_table))+1] = diff_table
   
   # same cluster
   g_vec_sc = prod(gamma(y_j + alpha_star))/gamma(num_diff + sum(alpha_star))
