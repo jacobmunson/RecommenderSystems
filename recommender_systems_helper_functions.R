@@ -380,7 +380,8 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
                                       "pearson_impute_zero",
                                       "cosine",
                                       "lira_multinomial",
-                                      "lira_multinomial_gaussian"))
+                                      "lira_multinomial_gaussian",
+                                      "lira_lrt"))
   
   if(similarity_measure == "lira_uniform"){
     for(u in 1:nrow(user_item_matrix)){
@@ -435,11 +436,19 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     for(u in 1:nrow(user_item_matrix)){
       similarity_matrix[1,u] = lira_multinomial_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
                                                          x_v = user_item_matrix[u,], 
-                                                         alpha_star = alpha_star)
+                                                         alpha_star = alpha_star, lira_same_cluster_pdf = lira_same_cluster_pdf)
     }
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
   
+  if(similarity_measure == "lira_lrt"){
+    for(u in 1:nrow(user_item_matrix)){
+      similarity_matrix[1,u] = lira_lrt(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+                                        x_v = user_item_matrix[u,], 
+                                        sd_pop = sd_pop)
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
+  }
   
   
   return(similarity_matrix)
@@ -473,4 +482,9 @@ lira_lrt_sd_sampling = function(dataset, iter){
   return(sd_pop)
   
 }
+
+
+
+
+
 
