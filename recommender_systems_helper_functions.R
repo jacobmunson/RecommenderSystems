@@ -371,14 +371,16 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
 }
 
 
-compute_neighbor_similarity = function(user_item_matrix, test_observation, similarity_measure){
+compute_neighbor_similarity = function(user_item_matrix, test_observation, similarity_measure, ...){
   similarity_matrix = matrix(data = NA, nrow = 1, ncol = nrow(user_item_matrix))
   
   stopifnot(similarity_measure %in% c("lira_uniform",
                                       "lira_gaussian_pure_chance",
                                       "pearson_pwc",
                                       "pearson_impute_zero",
-                                      "cosine"))
+                                      "cosine",
+                                      "lira_multinomial",
+                                      "lira_multinomial_gaussian"))
   
   if(similarity_measure == "lira_uniform"){
     for(u in 1:nrow(user_item_matrix)){
@@ -419,7 +421,24 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     similarity_matrix = t(similarity_matrix) # just for formatting where this gets consumed elsewhere
   }
   
+  if(similarity_measure == "lira_multinomial"){
+    for(u in 1:nrow(user_item_matrix)){
+      similarity_matrix[1,u] = lira_multinomial(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+                                                x_v = user_item_matrix[u,], 
+                                                alpha_star = alpha_star,  
+                                                lira_same_cluster_pdf = lira_same_cluster_pdf)
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
+  }
   
+  if(similarity_measure == "lira_multinomial_gaussian"){
+    for(u in 1:nrow(user_item_matrix)){
+      similarity_matrix[1,u] = lira_multinomial_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+                                                         x_v = user_item_matrix[u,], 
+                                                         alpha_star = alpha_star)
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
+  }
   
   
   
