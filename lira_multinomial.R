@@ -30,7 +30,20 @@ rating = sort(unique(D$rating), decreasing = F) - 1
 
 rating_data <- tibble(Rating = as.factor(rating),Freq = freq)
 
-amplication_factor = 20
+amplication_factor = 10
 dirichlet_prior_values <- freq/sum(freq)*amplication_factor
 multinomial_parameter_values <- rating_data$Freq/sum(rating_data$Freq)
-alpha_star = dirichlet_prior_values + multinomial_parameter_values
+alpha_star1 = dirichlet_prior_values + multinomial_parameter_values
+
+amplication_factor = 15
+dirichlet_prior_values <- freq/sum(freq)*amplication_factor
+multinomial_parameter_values <- rating_data$Freq/sum(rating_data$Freq)
+alpha_star2 = dirichlet_prior_values + multinomial_parameter_values
+
+amplication_factor = 10
+dirichlet_prior_values <- freq/sum(freq)*amplication_factor
+multinomial_parameter_values <- rating_data$Freq/sum(rating_data$Freq)
+alpha_star3 = 1 #dirichlet_prior_values + multinomial_parameter_values
+
+# 1,5,10 - showed higher -> better, but diminishing return between 5,10
+
