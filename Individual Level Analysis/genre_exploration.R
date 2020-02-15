@@ -2,9 +2,7 @@
 ### User Level Analysis ###
 # Genre Breakdowns ########
 ###########################
-library(readr)
-D = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
-colnames(D) = c("user","item","rating","timestamp")
+ 
 head(D)
 
 D_movies = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/movies.csv")
