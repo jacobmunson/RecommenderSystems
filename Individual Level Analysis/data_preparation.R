@@ -233,21 +233,7 @@ length(unique(unlist(lapply(1:length(l), FUN = function(i){strsplit(l[[i]], spli
 
 
 #################
-# reshaping benchmarks - skip - just putting here for records right now
-library(reshape2)
-library(microbenchmark)
-microbenchmark(
-  M = D %>% filter(user %in% (D_item %>% .$user)) %>% dcast(user~item, value.var = "rating")#, item == item_pred)
-)
 
-microbenchmark(
-  M = D %>% filter(user %in% (D_item %>% .$user)) %>% dcast(user~item, value.var = "rating")#, item == item_pred)
-)
-
-microbenchmark(
-  M = D %>% filter(user %in% (D_item %>% .$user)) %>% select(user, item, rating) %>% spread(item, rating)#, item == item_pred)
-)
-#################
 
 
 # Item-by-item similarity at the user-level
@@ -290,36 +276,37 @@ Dx_diff %>%
 
 D %>% group_by(user) %>% 
   arrange(timestamp) %>% 
-  filter(row_number() >= (n() - 10)) %>% 
+  filter(row_number() >= (n() - 5)) %>% 
   select(item) %>% 
   mutate(next_item = as.character(lead(item)), item = as.character(item)) %>% slice(1:(n()- 1)) %>%  
   rowwise() %>% mutate(item_sim = D_test_cor[item,next_item]) %>% ungroup() %>% group_by(user) %>% 
   summarize(mu_sim = mean(item_sim, na.rm = T), var_sim = var(item_sim, na.rm = T)) %>%
-  ggplot(aes(y = mu_sim, x = var_sim)) + geom_point() + theme_light()
+  ggplot(aes(y = mu_sim, x = var_sim)) + 
+  geom_point(alpha = 0.5) + 
+  theme_light() + geom_hline(yintercept = 0, col = 'red') + geom_vline(xintercept = 1, col = 'red') + 
+  ggtitle(label = "10M dataset - last 5 ratings")
+
+
+D_user_item_item = D %>% group_by(user) %>% 
+  arrange(timestamp) %>% 
+  filter(row_number() >= (n() - 5)) %>% 
+  select(item) %>% 
+  mutate(next_item = as.character(lead(item)), item = as.character(item)) %>% slice(1:(n()- 1)) %>%  
+  rowwise() %>% mutate(item_sim = D_test_cor[item,next_item]) %>% ungroup() %>% group_by(user) %>% 
+  summarize(mu_sim = mean(item_sim, na.rm = T), var_sim = var(item_sim, na.rm = T))
+
+D_user_item_item %>%
+  ggplot(aes(y = mu_sim, x = var_sim)) + 
+  geom_point(alpha = 0.5) + 
+  theme_light() + geom_hline(yintercept = 0, col = 'red') + geom_vline(xintercept = 1, col = 'red') + 
+  ggtitle(label = "10M dataset - last 5 ratings")
+
+
 
 Dx %>% 
   group_by(user) %>% 
   summarize(mu_sim = mean(item_sim, na.rm = T), sd_sim = sd(item_sim, na.rm = T)) %>%
   ggplot(aes(x = mu_sim, y = sd_sim)) + geom_point()
-
-
-
-#### Item "Acquisition" Rates
-
-D %>% mutate(date  = as.Date(as.POSIXct(timestamp, origin="1970-01-01"))) %>% 
-  group_by(item) %>% 
-  select(user, date) %>% 
-  group_by(item, user) %>% 
-  filter(row_number() >= (n() - 1)) %>% 
-  group_by(item, date) %>% 
-  summarize(num_users = n()) %>% 
-  filter(item == 356) %>% 
-  ggplot(aes(x = date, y = num_users)) + geom_point()
-
-D %>% group_by(item) %>% summarize(num_ratings = n()) %>% arrange(desc(num_ratings))
-
-
-# D %>% group_by(user,item) %>% summarize(num = n()) %>% filter(num > 1)
 
 
 # Single user similarity difference by item-by-item
