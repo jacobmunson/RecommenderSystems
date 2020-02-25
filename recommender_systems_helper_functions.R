@@ -323,7 +323,7 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
                                                mu_scale = NA, sd_scale = NA, quantile_scale = NA){
   sv = similarity_vector_with_self_similarity
   sv = sv[,order(sv, decreasing = TRUE)]
-  sv = sv[-1]
+  #sv = sv[-1] # handled elsewhere now
   
   if(positive_only){sv = sv[sv > 0]}
   
@@ -461,11 +461,11 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
 
 lira_lrt_sd_sampling = function(dataset, iter){
   
-  if(!("tidyverse" %in% (.packages()))){
-    library(tidyverse) 
+  if(!("dplyr" %in% (.packages()))){
+    library(dplyr) 
   }
   if(!("reshape2" %in% (.packages()))){
-    library(tidyverse) 
+    library(reshape2) 
   }
   
   diff_vector = c()
