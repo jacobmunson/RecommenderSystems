@@ -83,7 +83,7 @@ lira_lrt = function(x_u, x_v, sd_pop){
 
 
 # Lira gaussian variants 
-lira_gaussian = function(x_u, x_v, sd_sc, sd_pc){
+lira_gaussian_pc_sc = function(x_u, x_v, sd_sc, sd_pc){
   
   z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
   z_v = (x_v - mean(x_v, na.rm = T))/sd(x_v, na.rm = T)
@@ -379,6 +379,7 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
   
   stopifnot(similarity_measure %in% c("lira_uniform",
                                       "lira_gaussian_pure_chance",
+                                      "lira_gaussian_pure_chance_same_cluster",
                                       "pearson_pwc",
                                       "pearson_impute_zero",
                                       "cosine",
@@ -401,6 +402,16 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
       similarity_matrix[1,u] = lira_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
                                              x_v = user_item_matrix[u,], 
                                              lira_same_cluster_pdf = lira_same_cluster_pdf, 
+                                             sd_pc = sd_pc)
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
+  }
+  
+  if(similarity_measure == "lira_gaussian_pure_chance_same_cluster"){
+    for(u in 1:nrow(user_item_matrix)){
+      similarity_matrix[1,u] = lira_gaussian_pc_sc(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+                                             x_v = user_item_matrix[u,], 
+                                             sd_sc = sd_sc, 
                                              sd_pc = sd_pc)
     }
     colnames(similarity_matrix) = rownames(user_item_matrix)
