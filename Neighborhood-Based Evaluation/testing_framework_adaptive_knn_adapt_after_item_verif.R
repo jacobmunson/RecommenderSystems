@@ -6,8 +6,7 @@ library(readr)
 library(reshape2)
 library(doParallel)
 
-source('~/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
-
+source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
 # ratings <- read.table("Recommender Systems - Home Folder/ml-1m/ratings.dat")
 # ratings <- read.table("Recommender Systems - Home Folder/ml-10M/ratings.dat")
 # ratings <- read.table("Documents/Recommender Systems - Home Folder/ml-1m/ratings.dat")
@@ -47,31 +46,27 @@ shards = chunk(vector = seq(1:nrow(D_test)), num_splits = num_shards)
 names(shards) = seq(1,num_shards,1)
 
 ## Estimating variance for  LiRa LRT Similarity
-sd_pop = lira_lrt_sd_sampling(dataset = D_train, iter = 1500)
-sd_pc = 2
+#sd_pop = lira_lrt_sd_sampling(dataset = D_train, iter = 1500)
+#sd_pc = 4
 
 ## Setting k for kNN 
 K = c(3,5,7,10,15,20,30,40,50,60,80,160)
 
 ## Start Evaluation
-
-
-# rm(sim_matrix);gc() # 
+rm(sim_matrix);gc() # 
 start = Sys.time()
 
-# num_cores = detectCores();
-# cl <- makePSOCKcluster(num_cores)
-# registerDoParallel(cl)
+num_cores = detectCores();
+cl <- makePSOCKcluster(num_cores)
+registerDoParallel(cl)
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 
-sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","reshape2")) %do% {
-  print(i)
+sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","reshape2")) %dopar% {
+  #print(i)
   k_error_df_total = c()
   
   D_subset =  D_test[shards[[i]],]
-  #stored_similarity = c()
-  
-  
+ 
   for(j in 1:nrow(D_subset)){
     #print(j) # j = 11
     D_test_i = D_subset[j,]
@@ -84,133 +79,234 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
       rownames(B) = B$user
       B = as.matrix(B[,-1]) # unaltered from here on out
       
-
+      train_set = D_train
+      test_set = D_test_i
       
-      ## done
-      k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_gaussian_quant0.1", ae_nn = NA, ae_knn = NA)
+      B = B[which(rownames(B) %in% train_set$user),] # only carry around actual co-raters
+      
+      
+      ### make similarity vector out here...
+      ### manipulate and declare temps inside of nrow(B) > 1
+      
+      # sd_pc = 4
+      # 
+      # k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_gaussian_pc_sd4", ae_nn = NA, ae_knn = NA)
+      # if(nrow(B) > 1){
+      #   
+      #   similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
+      #                                                   test_observation = D_test_i,
+      #                                                   similarity_measure = "lira_gaussian_pure_chance")
+      #   
+      #   similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
+      #   
+      #   neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
+      #   neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+      #   
+      #   neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+      #   
+      #   # columns: k, k_current, ae_nn, ae_knn
+      #   # dimensions: K * 4
+      #   for(k in 1:length(K)){
+      #     
+      #     k_current = min(length(similarity_vector), K[k])
+      #     k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
+      #     
+      #     prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
+      #     
+      #     sim = prediction_neighbors$y
+      #     
+      #     #sim = sim[sim > 1*mean(neighbor_ratings$y) - 1.5*sd(neighbor_ratings$y)]
+      #     prediction_neighbors = neighbor_ratings[1:length(sim),]
+      #     
+      #     k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
+      #     
+      #     pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y)) # is this supposed to be /|abs(sim)|
+      #     k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
+      #     
+      #     pred_rating_knn = mean(prediction_neighbors$rating)
+      #     k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
+      #     
+      #   }
+      # }
+      # k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
+      
+      # sd_pc = 2
+      # 
+      # k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_gaussian_pc_sd2", ae_nn = NA, ae_knn = NA)
+      # if(nrow(B) > 1){
+      # 
+      #   similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
+      #                                                   test_observation = D_test_i,
+      #                                                   similarity_measure = "lira_gaussian_pure_chance")
+      # 
+      #   similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
+      # 
+      #   neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
+      #   neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+      # 
+      #   neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+      # 
+      #   # columns: k, k_current, ae_nn, ae_knn
+      #   # dimensions: K * 4
+      #   for(k in 1:length(K)){
+      # 
+      #     k_current = min(length(similarity_vector), K[k])
+      #     k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
+      # 
+      #     prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
+      # 
+      #     sim = prediction_neighbors$y
+      # 
+      #     #sim = sim[sim > 1*mean(neighbor_ratings$y) - 1.5*sd(neighbor_ratings$y)]
+      #     prediction_neighbors = neighbor_ratings[1:length(sim),]
+      # 
+      #     k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
+      # 
+      #     pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y)) # is this supposed to be /|abs(sim)|
+      #     k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
+      # 
+      #     pred_rating_knn = mean(prediction_neighbors$rating)
+      #     k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
+      # 
+      #   }
+      # }
+      # k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
+      
+      # k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_uniform", ae_nn = NA, ae_knn = NA)
+      # if(nrow(B) > 1){
+      #   
+      #   similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
+      #                                                   test_observation = D_test_i,
+      #                                                   similarity_measure = "lira_uniform")
+      #   
+      #   similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
+      # 
+      #   neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
+      #   neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+      #   
+      #   neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+      #   
+      #   # columns: k, k_current, ae_nn, ae_knn
+      #   # dimensions: K * 4
+      #   for(k in 1:length(K)){
+      #     
+      #     k_current = min(length(similarity_vector), K[k])
+      #     k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
+      #     
+      #     prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
+      #     
+      #     sim = prediction_neighbors$y
+      #     #sim = sim[sim > 1*mean(neighbor_ratings$y) - 1.5*sd(neighbor_ratings$y)]
+      #     prediction_neighbors = neighbor_ratings[1:length(sim),]
+      #     
+      #     k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
+      #     
+      #     pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y)) # is this supposed to be /|abs(sim)|
+      #     k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
+      #     
+      #     pred_rating_knn = mean(prediction_neighbors$rating)
+      #     k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
+      #     
+      #   }
+      # }
+      # k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
+      
+      k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_uniform", ae_nn = NA, ae_knn = NA)
       if(nrow(B) > 1){
-        
 
-        
-        
-        # stored_similarity = bind_rows(stored_similarity,
-        #                               data.frame(user1 = as.character(D_test_i$user), 
-        #                                          user2 = names(similarity_vector), 
-        #                                          sim = similarity_vector, 
-        #                                          stringsAsFactors = F))
-        # 
-        # stored_similarity %>% head()
-        # about_to_compute = data.frame(user1 = as.character(D_test_i$user), user2 = as.character(rownames(B)), stringsAsFactors = F)
-        # 
-        # a = about_to_compute
-        # b = about_to_compute %>% mutate(user2t = user2, user1t = user1, user1 = user2t, user2 = user1t) %>% select(user1, user2)
-        # str(a)
-        # str(b)
-        # c = bind_rows(a,b)
-        # 
-        # str(stored_similarity)
-        # 
-        # anti_join(c, stored_similarity)
-        # 
-        # inner_join(d, stored_similarity, by = c("user1" = "user1", "user1" = "user2"))
-        # 
-        # stored_similarity
-        # length(rownames(B))
-        # length(similarity_vector)
-
-        
         similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
-                                              test_observation = D_test_i,
-                                              similarity_measure = "lira_gaussian_pure_chance")
-        
+                                                        test_observation = D_test_i,
+                                                        similarity_measure = "lira_uniform")
+
         similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
- 
-        train_set = D_train 
+
+        train_set = D_train
         test_set = D_test_i
 
         neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
         neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
-        
+
         neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
 
         # columns: k, k_current, ae_nn, ae_knn
         # dimensions: K * 4
         for(k in 1:length(K)){
-          
+
           k_current = min(length(similarity_vector), K[k])
           k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
 
           prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
 
           sim = prediction_neighbors$y
-          sim = sim[sim > quantile(sim, probs = 0.1)]
-          #sim = sim[sim > quantile(sim, probs = 0.25)]
-          
-          #sim = sim[sim > 1*mean(sim) - 1.5*sd(sim)]
-          #sim =  sim[sim > 0*mean(sim) + 0.5*sd(sim)]
-          
-          prediction_neighbors = neighbor_ratings[1:length(sim),]# %>% na.omit()
-          
+
+          #sim = sim[sim > 1*mean(neighbor_ratings$y) - 1.5*sd(neighbor_ratings$y)]
+          prediction_neighbors = neighbor_ratings[1:length(sim),]
+
           k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
-          
+
           pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y)) # is this supposed to be /|abs(sim)|
           k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
-          
+
           pred_rating_knn = mean(prediction_neighbors$rating)
           k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
-          
-          # mae_nn #pred_lirau[1]
-          # mae_knn #pred_lirau[2]
+
         }
       }
       k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
-      
-      k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_gaussian", ae_nn = NA, ae_knn = NA)
-      if(nrow(B) > 1){
-        
-        similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
-                                                        test_observation = D_test_i,
-                                                        similarity_measure = "lira_gaussian_pure_chance")
-        
-        similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
-        
-        train_set = D_train 
-        test_set = D_test_i
-        
-        neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
-        neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
-        
-        neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
-        
-        # columns: k, k_current, ae_nn, ae_knn
-        # dimensions: K * 4
-        for(k in 1:length(K)){
-          
-          k_current = min(length(similarity_vector), K[k])
-          k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
-          
-          prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
-          
-          # sim = prediction_neighbors$y
-          # sim = sim[sim > quantile(sim, probs = 0.1)]
-          # 
-          # prediction_neighbors = neighbor_ratings[1:length(sim),]
-          
-          k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
-          
-          pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y)) # is this supposed to be /|abs(sim)|
-          k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
-          
-          pred_rating_knn = mean(prediction_neighbors$rating)
-          k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
-          
-          # mae_nn #pred_lirau[1]
-          # mae_knn #pred_lirau[2]
-        }
-      }
-      k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
-      
-      
+
+
+      # k_error_df_lirau = data.frame(K, k_current = NA, sim = "lira_mult_gauss_as5_quant0.5_conditional2sd", ae_nn = NA, ae_knn = NA)
+      # if(nrow(B) > 1){
+      #   
+      #   similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
+      #                                                   test_observation = D_test_i,
+      #                                                   similarity_measure = "lira_multinomial_gaussian", 
+      #                                                   alpha_star = rep(5, nrow(lira_pure_chance_pdf)))
+      #   
+      #   
+      #   similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
+      #   
+      #   train_set = D_train
+      #   test_set = D_test_i
+      #   
+      #   neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
+      #   neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+      #   
+      #   neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+      #   
+      #   # columns: k, k_current, ae_nn, ae_knn
+      #   # dimensions: K * 4
+      #   for(k in 1:length(K)){
+      #     
+      #     k_current = min(length(similarity_vector), K[k])
+      #     k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
+      #     
+      #     prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
+      #     
+      #     sim = prediction_neighbors$y
+      #     
+      #     #sim = sim[sim > quantile(sim, probs = 0.1)]
+      #     if(length(sim) > 1){
+      #       if(sd(sim) > 2*sd(neighbor_ratings$y)){
+      #         #sim = sim[sim > 1*mean(sim) - 1.5*sd(sim)] 
+      #         sim = sim[sim > quantile(sim, probs = 0.5)]
+      #       }            
+      #     }
+      #     
+      #     #sim = sim[sim > 1*mean(neighbor_ratings$y) - 1.5*sd(neighbor_ratings$y)]
+      #     prediction_neighbors = neighbor_ratings[1:length(sim),]
+      #     
+      #     k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
+      #     
+      #     pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y)) # is this supposed to be /|abs(sim)|
+      #     k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
+      #     
+      #     pred_rating_knn = mean(prediction_neighbors$rating)
+      #     k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
+      #     
+      #   }
+      # }
+      # k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
 
     }
     
@@ -220,7 +316,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind, .packages = c("dplyr","
   
 }
 
-#stopCluster(cl);# dim(M)
+stopCluster(cl);# dim(M)
 end = Sys.time()
 end - start # 1.02  
 
@@ -228,60 +324,98 @@ discordr::send_message(message = paste0("Mystery Machine done, took ",
                                         round(end - start,2)," ",
                                         units(end - start), " "))
 
+# EXAMINE BEFORE SAVING
 head(sim_matrix, n = 15) # visual inspection
 
+#sm1abc = sim_matrix 
+#sm2abc = sim_matrix 
+#sm3abc = sim_matrix 
+# sm4ab = sim_matrix 
+#sm5ab = sim_matrix
+D_sim = bind_rows(D_sim, sim_matrix) 
 
-sim_matrix %>% 
-  group_by(sim, K) %>%
+#sim_matrix_testing_modified_sd6 = bind_rows(sim_matrix)
+#sim_matrix_testing_modified_sd4 = bind_rows(sim_matrix_testing_modified_sd4, sim_matrix)
+
+library(ggplot2)
+
+sim_matrix 
+#bind_rows(sm1abc,sm2abc,sm3abc) %>% filter(sim != "lira_gaussian_scale_by_max") %>%#select(sim) %>% unique()
+
+sim_matrix %>%
+    group_by(sim, K) %>%
   summarize(MAE_nn = mean(ae_knn, na.rm = T)) %>% #ungroup() %>% 
   ggplot(aes(x = K, y = MAE_nn, group = `sim`, color = `sim`)) + 
   geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1)
 
-D_sim = sim_matrix
 
-
-D_sim %>% 
+bind_rows(sm1,sm2,sm3,sm4,sm5,
+          sm1a,sm2a,sm3a,sm4a,sm5a,
+          sm1ab,sm2ab,sm3ab,sm4ab,sm5ab) %>%
   group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
   summarize(MAE_nn = mean(ae_knn, na.rm = T)) %>% #ungroup() %>% 
   ggplot(aes(x = K, y = MAE_nn, group = `sim`, color = `sim`)) + 
   geom_point(color="black", size=2) + 
-  geom_line(linetype="dashed", size=1) + 
-  ggtitle("MovieLens - 100k - latest")
+  geom_line(linetype="dashed", size=1) # + ggtitle("MovieLens - 100k - latest")
 
 send_current_ggplot()
+
 
 #send_console(
-D_sim %>% 
-  group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
-  summarize(MAE_nn = mean(ae_knn, na.rm = T)) %>%
-  group_by(sim) %>% 
-  summarize(min_mae = min(MAE_nn)) %>%
-  inner_join(D_sim %>% 
-               group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
-               summarize(MAE_nn = mean(ae_knn, na.rm = T)), by = c("sim" = "sim", "min_mae" = "MAE_nn"))
+ 
+D_sim %>%
+group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+summarize(MAE_nn = mean(ae_knn, na.rm = T)) %>% #print(n = 72)
+group_by(sim) %>%
+summarize(min_mae = min(MAE_nn)) %>%
+inner_join(D_sim %>%
+             group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+             summarize(MAE_nn = mean(ae_knn, na.rm = T)),
+           by = c("sim" = "sim", "min_mae" = "MAE_nn")) %>% arrange(min_mae) %>% print(n = 70)
+#)
+send_message("ml-100k-latest with lira adaptation, all with lira gaussian sd=4, not 2")
 
 
-
-
-D_total_test
-D_total_test %>% 
-  filter(sim %in% c("lira_gauss",
-                    "cosine",
-                    "lira_gauss_mean0_sd1", 
-                    "lira_gauss_mean0_sd2",
-                    "lira_gauss_mean0_sd2.5",
-                    "lirau")) %>%
-  group_by(K, sim) %>% 
-  summarize(MAE = mean(ae_knn, na.rm = T), sim_sd = sd(ae_knn, na.rm = T)) %>% 
-  ggplot(aes(x = K, y = sim_sd, group = `sim`, color = `sim`)) + geom_line() + geom_point() + ggtitle(label = "SD against K value")
-send_current_ggplot()
-
-
-
-sim_matrix %>%
-  group_by(K, sim) %>% 
-  summarize(mean_k = mean(k_current), sd_k = sd(k_current)) %>%
-  ggplot(aes(x = K, y = mean_k, col = `sim`)) + 
-  geom_line() + geom_point() + ggtitle(label = "Average Actual Used K against Prescribed K")
 
 ###################################
+
+#write_csv(sim_matrix_testing_modified_sd4, "ml_100k_latest_sim_matrix_testing_modified_sd4.csv")
+
+
+emergency_comparisons_dataset4 
+D_sim %>% 
+  group_by(sim) %>% 
+  mutate(count = n()) %>% 
+  filter(is.na(ae_knn)) %>% 
+  group_by(sim) %>% 
+  mutate(count_na = n()) %>% 
+  mutate(na_pct = 100*count_na/count) %>% 
+  select(sim, na_pct) %>% unique() %>% print(n = 75)
+
+gc()
+
+data = bind_rows(sm1abc,sm2abc,sm3abc)  #bind_rows(sm1,sm2,sm3,sm4,sm5,sm1a,sm2a,sm3a,sm4a,sm5a)  #sim_matrix #emergency_comparisons_dataset4 # sim_matrix_testing_modified_sd4 # 
+data %>%
+  group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+  summarize(MAE_nn = mean(ae_knn, na.rm = T)) %>% #print(n = 72)
+  group_by(sim) %>%
+  summarize(min_mae = min(MAE_nn)) %>%
+  inner_join(data %>%
+               group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+               summarize(MAE_nn = mean(ae_knn, na.rm = T)),
+             by = c("sim" = "sim", "min_mae" = "MAE_nn")) %>% 
+  arrange(min_mae) %>% 
+  inner_join(data %>% 
+               group_by(sim) %>% 
+               mutate(count = n()) %>% 
+               filter(is.na(ae_knn)) %>% 
+               group_by(sim) %>% 
+               mutate(count_na = n()) %>% 
+               mutate(na_pct = 100*count_na/count) %>% 
+               select(sim, na_pct) %>% unique(),
+             by = c("sim" = "sim")) %>% print(n = 75)
+
+
+
+
+
