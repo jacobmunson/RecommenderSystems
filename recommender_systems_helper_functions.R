@@ -68,6 +68,33 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
   return(lira)
 }
 
+lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){ 
+  
+  # Version built with some C++ guts replacing table() call
+  
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  #num_diff = length(diff)
+  
+  #diff_table = table(diff)
+  
+  diff_table = top_n(diff, n = length(unique(diff)))
+  
+  # same cluster
+  #lira_top = prod(lira_same_cluster_pdf[names(diff_table),]^diff_table)
+  lira_top = prod(lira_same_cluster_pdf[as.character(diff_table$value),]^diff_table$frequency)
+  
+  
+  # pure chance
+  #lira_bottom = prod(lira_pure_chance_pdf[names(diff_table),]^diff_table)
+  lira_bottom = prod(lira_pure_chance_pdf[as.character(diff_table$value),]^diff_table$frequency)
+  
+  
+  lira = log10(lira_top/lira_bottom)
+  return(lira)
+}
+
+
 dnorm_diff <- function(x, mu, sigma){sqrt(2 / pi) / sigma * cosh(x * mu / sigma^2) * exp(-(x^2 + mu^2)/(2*sigma^2))}
 
 
@@ -371,8 +398,6 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
   
   return(sv)
 }
-x = NA
-missing(x)
 
 compute_neighbor_similarity = function(user_item_matrix, test_observation, similarity_measure, alpha_star = NULL){
   similarity_matrix = matrix(data = NA, nrow = 1, ncol = nrow(user_item_matrix))
@@ -417,10 +442,21 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
   
+  # if(similarity_measure == "pearson_pwc"){
+  #   similarity_matrix = cor(t(user_item_matrix), use = "pairwise.complete.obs")
+  #   similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
+  # }
+  
   if(similarity_measure == "pearson_pwc"){
-    similarity_matrix = cor(t(user_item_matrix), use = "pairwise.complete.obs")
-    similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
+    for(u in 1:nrow(user_item_matrix)){
+      index = which(!is.na(user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),] - user_item_matrix[u,]))
+      similarity_matrix[1,u] = correlationCoefficient(X = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),index],
+                                                      Y = user_item_matrix[u,index])
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
   }
+  
+  
   
   if(similarity_measure == "pearson_impute_zero"){
     user_item_matrix[is.na(user_item_matrix)] = 0
@@ -428,13 +464,25 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
   }
   
+  # if(similarity_measure == "cosine"){
+  #   user_item_matrix[is.na(user_item_matrix)] = 0
+  #   similarity_matrix = cosine_similarity(matrix = user_item_matrix)
+  #   similarity_matrix[is.nan(similarity_matrix)] = 0
+  #   similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
+  #   similarity_matrix = t(similarity_matrix) # just for formatting where this gets consumed elsewhere
+  # }
+  
   if(similarity_measure == "cosine"){
-    user_item_matrix[is.na(user_item_matrix)] = 0
-    similarity_matrix = cosine_similarity(matrix = user_item_matrix)
-    similarity_matrix[is.nan(similarity_matrix)] = 0
-    similarity_matrix = similarity_matrix[which(rownames(similarity_matrix) == test_observation$user),]
-    similarity_matrix = t(similarity_matrix) # just for formatting where this gets consumed elsewhere
+    for(u in 1:nrow(user_item_matrix)){
+      index = which(!is.na(user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),] - user_item_matrix[u,]))
+      similarity_matrix[1,u] = cosine_vector_similarity(X = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),index],
+                                                        Y = user_item_matrix[u,index])
+    }
+    colnames(similarity_matrix) = rownames(user_item_matrix)
   }
+  
+  
+  
   
   if(similarity_measure == "lira_multinomial"){
     stopifnot(!is.null(alpha_star))
