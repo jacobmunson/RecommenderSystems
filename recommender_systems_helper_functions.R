@@ -71,7 +71,8 @@ lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
 lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){ 
   
   # Version built with some C++ guts replacing table() call
-  
+  #print(x_u)
+  #print(x_v)
   diff = abs(x_u - x_v)
   diff = diff[!is.na(diff)]
   #num_diff = length(diff)
@@ -412,13 +413,20 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
                                       "lira_multinomial_gaussian",
                                       "lira_lrt"))
   
+  # if(similarity_measure == "lira_uniform"){
+  #   for(u in 1:nrow(user_item_matrix)){
+  #     similarity_matrix[1,u] = lira(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+  #                                   x_v = user_item_matrix[u,], 
+  #                                   lira_same_cluster_pdf = lira_same_cluster_pdf, 
+  #                                   lira_pure_chance_pdf = lira_pure_chance_pdf)
+  #   }
+  #   colnames(similarity_matrix) = rownames(user_item_matrix)
+  # }
+  
   if(similarity_measure == "lira_uniform"){
-    for(u in 1:nrow(user_item_matrix)){
-      similarity_matrix[1,u] = lira(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
-                                    x_v = user_item_matrix[u,], 
-                                    lira_same_cluster_pdf = lira_same_cluster_pdf, 
-                                    lira_pure_chance_pdf = lira_pure_chance_pdf)
-    }
+    similarity_matrix = lira_loop(user_item_matrix = user_item_matrix, 
+                                  lira_pure_chance_pdf = lira_pure_chance_pdf, 
+                                  lira_same_cluster_pdf = lira_same_cluster_pdf)
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
   
