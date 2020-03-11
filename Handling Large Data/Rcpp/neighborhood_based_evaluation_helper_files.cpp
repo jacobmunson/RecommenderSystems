@@ -176,9 +176,7 @@ Rcpp::List top_n(Rcpp::NumericVector x, int n = 5) {
 
 // this works - https://www.geeksforgeeks.org/program-find-correlation-coefficient/
 // [[Rcpp::export]]
-float correlationCoefficient(NumericVector X, NumericVector Y) 
-{ 
-  
+float correlationCoefficient(NumericVector X, NumericVector Y){ 
   int n = X.length();
   float sum_X = 0, sum_Y = 0, sum_XY = 0; 
   float squareSum_X = 0, squareSum_Y = 0; 
@@ -197,18 +195,13 @@ float correlationCoefficient(NumericVector X, NumericVector Y)
     squareSum_X = squareSum_X + X[i] * X[i]; 
     squareSum_Y = squareSum_Y + Y[i] * Y[i]; 
   } 
-  
-  // use formula for calculating correlation coefficient. 
   float corr = (float)(n * sum_XY - sum_X * sum_Y) / sqrt((n * squareSum_X - sum_X * sum_X) * (n * squareSum_Y - sum_Y * sum_Y)); 
-             
   return corr; 
 } 
 
 
 // [[Rcpp::export]]
-float cosine_vector_similarity(NumericVector X, NumericVector Y) 
-{ 
-  
+float cosine_vector_similarity(NumericVector X, NumericVector Y){ 
   int n = X.length();
   float sum_X = 0, sum_Y = 0, sum_XY = 0; 
   float squareSum_X = 0, squareSum_Y = 0; 
@@ -227,17 +220,47 @@ float cosine_vector_similarity(NumericVector X, NumericVector Y)
     squareSum_X = squareSum_X + X[i] * X[i]; 
     squareSum_Y = squareSum_Y + Y[i] * Y[i]; 
   } 
-  
-  // use formula for calculating correlation coefficient. 
   float cos = (float)(sum_XY)/(sqrt(squareSum_X)*sqrt(squareSum_Y)); 
-  
   return cos; 
 } 
 
+// [[Rcpp::export]]
+NumericVector lira_loop(Rcpp::NumericMatrix user_item_matrix, Rcpp::NumericMatrix lira_pure_chance_pdf, Rcpp::NumericMatrix lira_same_cluster_pdf) {  
+  
+  int nrow = user_item_matrix.nrow(); //, ncol = user_item_matrix.ncol();
+  
+  Rcpp::NumericMatrix lira_vector(1,nrow);
+
+  
+  //Rcout << "The value of nrow : " << nrow << "\n";
+  //Rcout << "The value of ncol : " << ncol << "\n";
+
+  // function
+  Rcpp::Environment G = Rcpp::Environment::global_env();
+  Rcpp::Function lira = G["lira"];
+  Rcpp::NumericVector u = user_item_matrix(0,_); // 1st user
+  
+  for(int i = 0; i < nrow; i++){
+    Rcpp::NumericVector u_i = user_item_matrix(i,_);    
+    Rcpp::NumericVector lira_temp = lira(u, u_i,lira_pure_chance_pdf,lira_same_cluster_pdf);
+    lira_vector[i] = lira_temp[0];
+
+  }
+  
+  return lira_vector;
+}
 
 
 
-
+// [[Rcpp::export]]
+double intecxx(Rcpp::NumericVector x, Rcpp::NumericVector y, double a, double b) {  
+  Rcpp::NumericVector res;
+  Rcpp::Environment G = Rcpp::Environment::global_env();
+  Rcpp::Function inte = G["inte"];
+  res = inte(x, y, a, b);
+  Rcout << res << "\n";
+  return res[0];
+}
 
 
 
