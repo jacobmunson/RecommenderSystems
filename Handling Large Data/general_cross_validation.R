@@ -1,10 +1,12 @@
-D = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
-colnames(D) = c("user","item","rating","timestamp")
+# D = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
+# colnames(D) = c("user","item","rating","timestamp")
+
+
 
 chunk = function(vector, num_splits){return(split(vector, factor(sort(rank(vector) %% num_splits))))}
 
 num_cv = 5
-cvs = chunk(vector = sample(seq(1:nrow(D))), num_splits = num_cv)
+cvs = chunk(vector = sample(seq(1:nrow(dataset))), num_splits = num_cv)
 cv_df = t(combn(num_cv, num_cv - 1))
 
 
@@ -14,18 +16,18 @@ train_index3 = data.frame(index = unlist(cvs[cv_df[3,]]))
 train_index4 = data.frame(index = unlist(cvs[cv_df[4,]]))
 train_index5 = data.frame(index = unlist(cvs[cv_df[5,]]))
 
-D1_train = D[train_index1$index,]
-D1_test = D[-train_index1$index,]
+D1_train = dataset[train_index1$index,]
+D1_test = dataset[-train_index1$index,]
 
-D2_train = D[train_index2$index,]
-D2_test = D[-train_index2$index,]
+D2_train = dataset[train_index2$index,]
+D2_test = dataset[-train_index2$index,]
 
-D3_train = D[train_index3$index,]
-D3_test = D[-train_index3$index,]
+D3_train = dataset[train_index3$index,]
+D3_test = dataset[-train_index3$index,]
 
-D4_train = D[train_index4$index,]
-D4_test = D[-train_index4$index,]
+D4_train = dataset[train_index4$index,]
+D4_test = dataset[-train_index4$index,]
 
-D5_train = D[train_index5$index,]
-D5_test = D[-train_index5$index,]
+D5_train = dataset[train_index5$index,]
+D5_test = dataset[-train_index5$index,]
 
