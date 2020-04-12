@@ -1,12 +1,8 @@
 # D = read_csv("~/Recommender Systems - Home Folder/ml-latest-small-100k/ratings.csv")
 # colnames(D) = c("user","item","rating","timestamp")
-<<<<<<< HEAD
 set.seed(1)
-=======
 
 
-
->>>>>>> e0f06085438e38b10d7c2c98a31f18da0e459b7b
 chunk = function(vector, num_splits){return(split(vector, factor(sort(rank(vector) %% num_splits))))}
 
 num_cv = 5
