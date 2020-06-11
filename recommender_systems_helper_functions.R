@@ -130,6 +130,9 @@ lira_gaussian_pc_sc = function(x_u, x_v, sd_sc, sd_pc){
   return(lira)
 }
 
+
+
+
 lira_gaussian = function(x_u, x_v, sd_sc, lira_pure_chance_pdf){
   
   z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
@@ -157,6 +160,9 @@ lira_gaussian = function(x_u, x_v, sd_sc, lira_pure_chance_pdf){
   return(lira)
 }
 
+
+
+
 lira_gaussian = function(x_u, x_v, sd_pc, lira_same_cluster_pdf){
   
   z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
@@ -179,7 +185,7 @@ lira_gaussian = function(x_u, x_v, sd_pc, lira_same_cluster_pdf){
   
   # pure chance
   #lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
-  
+
   
   lira = log10((lira_top/lira_bottom))
   
@@ -394,7 +400,12 @@ nearest_neighbors_trimming_function = function(similarity_vector_with_self_simil
     
   }
   
+  if(any(is.infinite(sv) & sv > 0)){
+    
+    sv[is.infinite(sv) & sv > 0] = 10000
+  }
   
+    
   sv = sv[is.finite(sv)]
   
   return(sv)
@@ -430,6 +441,7 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
   
+
   if(similarity_measure == "lira_gaussian_pure_chance"){
     for(u in 1:nrow(user_item_matrix)){
       similarity_matrix[1,u] = lira_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
