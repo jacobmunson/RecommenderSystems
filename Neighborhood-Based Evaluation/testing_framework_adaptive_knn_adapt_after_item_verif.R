@@ -11,11 +11,16 @@ Rcpp::sourceCpp('Documents/GitHub/RecommenderSystems/Handling Large Data/Rcpp/ne
 source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
 
 
-D = as_tibble(D)
-
-dim(D)
-D <- read_csv("~/Documents/ml-latest-small/ml-latest-small/ratings.csv")
+setwd("~/Documents")
+D = read_csv("Recommender Systems - Home Folder/ml-latest-small/ratings.csv")
+#D = read_csv("~/Recommender Systems - Home Folder/ml-20m/ratings.csv")
 colnames(D) = c("user","item","rating","timestamp")
+
+
+
+message("Splitting data...")
+dataset = D
+source('GitHub/RecommenderSystems/Handling Large Data/general_cross_validation.R')
 
 #set.seed(1)
 #train_index = sample(x = 1:nrow(D), size = 0.8*nrow(D), replace = F)
@@ -50,9 +55,9 @@ cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 
 sim_matrix = foreach(i = 1:num_shards, .combine = rbind, 
                      .packages = c("dplyr","reshape2","Rcpp"),
-                     .noexport = c("top_n", "lira_loop", "correlationCoefficient")) %dopar% {
+                     .noexport = c("top_n", "lira_loop", "correlationCoefficient", "cosine_vector_similarity")) %dopar% {
   source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
-  Rcpp::sourceCpp('Documents/GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
+  Rcpp::sourceCpp('~/Documents/GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
                        
   print(i)
   k_error_df_total = c() # work on predefining this maybe
@@ -288,6 +293,70 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
         similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
                                                         test_observation = D_test_i,
                                                         similarity_measure = "pearson_pwc")
+        
+        similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
+        
+        neighbor_ratings = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
+        neighbor_ratings = merge(neighbor_ratings[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+        
+        neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+        
+        
+        
+        
+        # columns: k, k_current, ae_nn, ae_knn
+        # dimensions: K * 4
+        for(k in 1:length(K)){
+          
+          k_current = min(length(similarity_vector), K[k])
+          k_current = max(k_current, min(K)) # to enforce minimum number of neighbors
+          
+          prediction_neighbors = neighbor_ratings[1:k_current,] %>% na.omit()
+          
+          sim = prediction_neighbors$rating#y
+          
+          #sim = sim[sim > quantile(sim, probs = 0.1)]
+          if(length(tau) == 1){
+            if(length(sim) > min_num_sim){
+              if(sd(sim) > tau*sd(neighbor_ratings$rating)){
+                
+                prediction_neighbors = prediction_neighbors %>%
+                  filter(rating >= quantile(rating, probs = lower_q) & rating <= quantile(rating, probs = upper_q))
+                #filter(rating > 1*mean(rating) - sd_scale*sd(rating) & rating < 1*mean(rating) + sd_scale*sd(rating))
+                #filter(y > 1*mean(y) - sd_scale*sd(y)) #  - 1.25*sd(y) & y < 1*mean(y) + 1.25*sd(y)
+                #sim = sim[sim > 1*mean(sim) - 1.5*sd(sim) & sim < 1*mean(sim) + 1.5*sd(sim)]
+                #sim = sim[sim > quantile(sim, probs = 0.5)]
+              }
+            }
+          }
+          
+          
+          
+          #sim = sim[sim > 1*mean(neighbor_ratings$y) - 1.5*sd(neighbor_ratings$y)]
+          if(any(prediction_neighbors$y <= 0)){
+            prediction_neighbors = prediction_neighbors %>% mutate(temp_y = y + abs(min(y)) + eps, weight_y = temp_y/max(temp_y))
+          }else{prediction_neighbors = prediction_neighbors %>% mutate(weight_y = y/max(y))}
+          
+          # prediction_neighbors = neighbor_ratings[1:length(sim),]
+          
+          k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
+          
+          pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$weight_y)/sum(abs(prediction_neighbors$weight_y))# is this supposed to be /|abs(sim)|
+          k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
+          
+          pred_rating_knn = mean(prediction_neighbors$rating)
+          k_error_df_lirau[k,"ae_knn"] = abs(pred_rating_knn - test_set$rating)
+          
+        }
+      }
+      k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
+      
+      k_error_df_lirau = data.frame(K, k_current = NA, sim = "cosine", ae_nn = NA, ae_knn = NA)
+      if(nrow(B) > 1){
+        
+        similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
+                                                        test_observation = D_test_i,
+                                                        similarity_measure = "cosine")
         
         similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
         
