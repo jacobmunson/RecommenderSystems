@@ -250,6 +250,35 @@ NumericVector lira_loop(Rcpp::NumericMatrix user_item_matrix, Rcpp::NumericMatri
   return lira_vector;
 }
 
+// [[Rcpp::export]]
+NumericVector lira_gaussian_loop(Rcpp::NumericMatrix user_item_matrix, 
+                                 Rcpp::NumericVector sd_pc, 
+                                 Rcpp::NumericMatrix lira_same_cluster_pdf) {  
+  
+  int nrow = user_item_matrix.nrow(); //, ncol = user_item_matrix.ncol();
+  
+  Rcpp::NumericMatrix lira_vector(1,nrow);
+  
+  
+  //Rcout << "The value of nrow : " << nrow << "\n";
+  //Rcout << "The value of ncol : " << ncol << "\n";
+  
+  // function
+  Rcpp::Environment G = Rcpp::Environment::global_env();
+  Rcpp::Function lira_gaussian = G["lira_gaussian"];
+  Rcpp::NumericVector u = user_item_matrix(0,_); // 1st user
+  
+  for(int i = 0; i < nrow; i++){
+    Rcpp::NumericVector u_i = user_item_matrix(i,_);    
+    Rcpp::NumericVector lira_temp = lira_gaussian(u,u_i,sd_pc,lira_same_cluster_pdf);
+    lira_vector[i] = lira_temp[0];
+    
+  }
+  
+  return lira_vector;
+}
+
+
 
 
 // [[Rcpp::export]]
