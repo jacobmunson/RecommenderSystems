@@ -48,7 +48,8 @@ cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 
 sim_matrix = foreach(i = 1:num_shards, .combine = rbind, 
                      .packages = c("dplyr","reshape2","Rcpp"),
-                     .noexport = c("top_n", "lira_loop", "lira_gaussian_loop", "correlationCoefficient", "cosine_vector_similarity")) %dopar% {
+                     .noexport = c("top_n", "lira_loop", "lira_gaussian_loop", 
+                                   "correlationCoefficient", "cosine_vector_similarity")) %dopar% {
   source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
   Rcpp::sourceCpp('GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
                        
