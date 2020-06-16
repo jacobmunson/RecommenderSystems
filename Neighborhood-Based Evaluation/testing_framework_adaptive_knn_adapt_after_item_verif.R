@@ -7,23 +7,17 @@ library(reshape2)
 library(doParallel)
 library(ggplot2)
 
-Rcpp::sourceCpp('Documents/GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
-source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
-
-
 setwd("~/Documents")
+
+Rcpp::sourceCpp('GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
+source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
+
 D = read_csv("Recommender Systems - Home Folder/ml-latest-small/ratings.csv")
-#D = read_csv("~/Recommender Systems - Home Folder/ml-20m/ratings.csv")
 colnames(D) = c("user","item","rating","timestamp")
-
-
 
 message("Splitting data...")
 dataset = D
 source('GitHub/RecommenderSystems/Handling Large Data/general_cross_validation.R')
-
-#set.seed(1)
-#train_index = sample(x = 1:nrow(D), size = 0.8*nrow(D), replace = F)
 
 D_train = D1_train # D[train_index,]
 D_test = D1_test # D[-train_index,]
@@ -31,15 +25,14 @@ nrow(D_test);nrow(D_train)
 
 
 ## Build LiRa Distributions
-source('~/Documents/GitHub/RecommenderSystems/build_lira_distributions.R')
+source('GitHub/RecommenderSystems/build_lira_distributions.R')
 ## Chunk test set
-source('~/Documents/GitHub/RecommenderSystems/chunk_test_set.R')
+source('GitHub/RecommenderSystems/chunk_test_set.R')
 
 ## LiRa LRT Variance Estimation
 #sd_pop = lira_lrt_sd_sampling(dataset = D_train, iter = 1500)
 
 ## LiRa Gaussian - Pure Chance Standard Deviation Parameter
-#sd_pc = 4
 sd_pc = 4
 ## Setting k for kNN 
 K = c(3,5,7,10,15,20,30,40,50,60,80,160)
@@ -55,9 +48,9 @@ cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 
 sim_matrix = foreach(i = 1:num_shards, .combine = rbind, 
                      .packages = c("dplyr","reshape2","Rcpp"),
-                     .noexport = c("top_n", "lira_loop", "correlationCoefficient", "cosine_vector_similarity")) %dopar% {
-  source('~/Documents/GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
-  Rcpp::sourceCpp('~/Documents/GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
+                     .noexport = c("top_n", "lira_loop", "lira_gaussian_loop", "correlationCoefficient", "cosine_vector_similarity")) %dopar% {
+  source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
+  Rcpp::sourceCpp('GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
                        
   print(i)
   k_error_df_total = c() # work on predefining this maybe
