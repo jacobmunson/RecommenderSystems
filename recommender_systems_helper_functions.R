@@ -23,35 +23,6 @@ mean_center_matrix <- function(D){
   apply(X = D, MARGIN = 1, FUN = function(row){row - mean(row, na.rm = TRUE)})
 }
 
-lira = function(x_u, x_v, num_ratings, lira_pure_chance_pdf){
-  
-  diff = abs(x_u - x_v)
-  diff = diff[!is.na(diff)]
-  num_diff = length(diff)
-  
-  d = num_ratings
-  
-  # pure chance
-  lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
-
-
-  # same cluster
-#  if(any(diff == d - 1)){
-    lira_top = c()
-    for(i in 1:num_diff){
-      if(diff[i] == d - 1){
-        lira_top[i] = 1/(2^(d - 1))    
-      }else{
-        lira_top[i] = (1/2)^(diff[i] + 1)
-      }
-    }
-    lira_top = prod(lira_top)
-#  }
-  
-  lira = log10(lira_top/lira_bottom)
-  return(lira)
-}
-
 lira = function(x_u, x_v, lira_pure_chance_pdf, lira_same_cluster_pdf){
   
   diff = abs(x_u - x_v)
@@ -187,6 +158,38 @@ lira_gaussian = function(x_u, x_v, sd_pc, lira_same_cluster_pdf){
   #lira_bottom = prod(lira_pure_chance_pdf[names(table(diff)),]^table(diff))
 
   
+  lira = log10((lira_top/lira_bottom))
+  
+  return(lira)
+}
+
+
+
+
+lira_gaussian = function(x_u, x_v, sd_pc, lira_same_cluster_pdf){
+  
+  # replacing table calls with C++
+  z_u = (x_u - mean(x_u, na.rm = T))/sd(x_u, na.rm = T); 
+  z_v = (x_v - mean(x_v, na.rm = T))/sd(x_v, na.rm = T)
+  
+  
+  diff = abs(x_u - x_v)
+  diff = diff[!is.na(diff)]
+  num_diff = length(diff)
+  diff_z = abs(z_u - z_v)
+  diff_z = diff_z[!is.na(diff_z)]
+  num_diff_z = length(diff_z)
+  
+  diff_table = top_n(diff, n = length(unique(diff)))
+  
+  
+  # same cluster
+  #lira_top = prod(lira_same_cluster_pdf[names(diff_table),]^diff_table)
+  lira_top = prod(lira_same_cluster_pdf[as.character(diff_table$value),]^diff_table$frequency)
+
+  # pure chance
+  lira_bottom = prod(dnorm_diff(x = diff_z, mu = 0, sigma = sqrt(sum(c(sd_pc,sd_pc)^2))))
+
   lira = log10((lira_top/lira_bottom))
   
   return(lira)
@@ -441,16 +444,28 @@ compute_neighbor_similarity = function(user_item_matrix, test_observation, simil
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
   
-
+  
+  
+  
   if(similarity_measure == "lira_gaussian_pure_chance"){
-    for(u in 1:nrow(user_item_matrix)){
-      similarity_matrix[1,u] = lira_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
-                                             x_v = user_item_matrix[u,], 
-                                             lira_same_cluster_pdf = lira_same_cluster_pdf, 
-                                             sd_pc = sd_pc)
-    }
+    similarity_matrix = lira_gaussian_loop(user_item_matrix = user_item_matrix, 
+                                           sd_pc = sd_pc, 
+                                           lira_same_cluster_pdf = lira_same_cluster_pdf)
     colnames(similarity_matrix) = rownames(user_item_matrix)
   }
+  
+
+  # if(similarity_measure == "lira_gaussian_pure_chance"){
+  #   for(u in 1:nrow(user_item_matrix)){
+  #     similarity_matrix[1,u] = lira_gaussian(x_u = user_item_matrix[which(rownames(user_item_matrix) == test_observation$user),], 
+  #                                            x_v = user_item_matrix[u,], 
+  #                                            lira_same_cluster_pdf = lira_same_cluster_pdf, 
+  #                                            sd_pc = sd_pc)
+  #   }
+  #   colnames(similarity_matrix) = rownames(user_item_matrix)
+  # }
+  
+  
   
   if(similarity_measure == "lira_gaussian_pure_chance_same_cluster"){
     for(u in 1:nrow(user_item_matrix)){
