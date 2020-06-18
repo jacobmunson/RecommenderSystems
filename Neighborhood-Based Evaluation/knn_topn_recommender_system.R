@@ -27,6 +27,7 @@ nrow(D_test);nrow(D_train)
 ## Build LiRa Distributions
 source('GitHub/RecommenderSystems/build_lira_distributions.R')
 ## Chunk test set
+shard_multiplier = 20
 source('GitHub/RecommenderSystems/chunk_test_set_users.R')
 
 ## LiRa LRT Variance Estimation
@@ -36,7 +37,7 @@ source('GitHub/RecommenderSystems/chunk_test_set_users.R')
 sd_pc = 4
 ## Setting k for kNN 
 K = c(3,5,7,10,15,20,30,40,50,60,80,160)
-
+eps = 0.001
 ## Start Evaluation
 rm(sim_matrix);gc() # 
 start = Sys.time()
@@ -56,7 +57,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                        source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
                        Rcpp::sourceCpp('GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
                        
-                       print(i)
+                       # print(i)
                        k_error_df_total = c() # work on predefining this maybe
                        
                        
@@ -65,7 +66,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                        # nrow(pred_df)
                        # 5*length(unique(D_train$item))
                        
-                       
+          
                        D_subset = expand.grid(user = shards[[i]], item = unique(D_train$item)) #, pred_weighted = NA, pred_unweighted = NA)
                        
                        for(j in 1:nrow(D_subset)){
@@ -87,21 +88,33 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                            rownames(B) = B$user
                            B = as.matrix(B[,-1]) # unaltered from here on out
                            
-                           test_user_row = which(rownames(B) == as.character(D_test_i$user))
-                           B_temp = B[test_user_row,]
+                           if(any(rownames(B) == D_test_i$user)){
+                             test_user_row = which(rownames(B) == as.character(D_test_i$user))
+                             B_temp = B[test_user_row,]
+                             
+                             old_name = rownames(B)[1]
+                             
+                             B[test_user_row,] = B[1,]
+                             B[1,] = B_temp
+                             
+                             rownames(B)[1] = as.character(D_test_i$user)
+                             rownames(B)[test_user_row] = as.character(old_name)
+                             
+                             B = B[-1,]
+                           }
                            
-                           old_name = rownames(B)[1]
-                           
-                           B[test_user_row,] = B[1,]
-                           B[1,] = B_temp
-                           
-                           rownames(B)[1] = as.character(D_test_i$user)
-                           rownames(B)[test_user_row] = as.character(old_name)
+                           # str(B)
+                           # str( B[which(rownames(B) %in% train_set$user),])
+                           # as.matrix(B)
                            
                            train_set = D_train
                            test_set = D_test_i
                            
-                           B = B[which(rownames(B) %in% train_set$user),] # only carry around actual co-raters
+             
+                           rownames_B = rownames(B)
+                            # only carry around actual co-raters
+                           
+                           if(is.null(nrow(B))){B = t(as.matrix(B)); rownames(B) = rownames_B}else{B = B[which(rownames(B) %in% train_set$user),]}
                            
                            
                            ### make similarity vector out here...
@@ -170,7 +183,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                            # k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
                            
                            k_error_df_lirau = data.frame(user = test_set$user, item = test_set$item, K, k_current = NA, sim = "lira_uniform", weighted_pred = NA, unweighted_pred = NA)
-                           if(nrow(B) > 1){
+                           if(nrow(B) > 0){
                              
                              similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
                                                                              test_observation = D_test_i,
@@ -211,7 +224,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                            k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
                            
                            k_error_df_lirau = data.frame(user = test_set$user, item = test_set$item, K, k_current = NA, sim = "lira_gaussian_pc_sd4", weighted_pred = NA, unweighted_pred = NA)
-                           if(nrow(B) > 1){
+                           if(nrow(B) > 0){
                              
                              similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
                                                                              test_observation = D_test_i,
@@ -253,7 +266,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                            k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
                            
                            k_error_df_lirau = data.frame(user = test_set$user, item = test_set$item, K, k_current = NA, sim = "pearson_pwc", weighted_pred = NA, unweighted_pred = NA)
-                           if(nrow(B) > 1){
+                           if(nrow(B) > 0){
                              
                              similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
                                                                              test_observation = D_test_i,
@@ -294,7 +307,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                            k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
                            
                            k_error_df_lirau = data.frame(user = test_set$user, item = test_set$item, K, k_current = NA, sim = "cosine", weighted_pred = NA, unweighted_pred = NA)
-                           if(nrow(B) > 1){
+                           if(nrow(B) > 0){
                              
                              similarity_vector = compute_neighbor_similarity(user_item_matrix = B,
                                                                              test_observation = D_test_i,
@@ -339,9 +352,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
                          
                        }
                        
-                       k_error_df_total
-                       
-                       
+                       k_error_df_total 
                        
                      }
 
