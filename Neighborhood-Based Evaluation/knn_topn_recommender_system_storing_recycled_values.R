@@ -33,6 +33,10 @@ stored_sim_matrix = expand.grid(user1 = unique(D$user),
                                 sim_lg = NA)
 #stored_sim_matrix = as_tibble(stored_sim_matrix)
 
+## Setting k for kNN 
+K = c(15,20)
+eps = 0.001
+
 
 # Prediction dataframe to fill up
 pred_df_total = expand.grid(test_user = unique(D_test$user), 
@@ -48,6 +52,24 @@ pred_df_total = expand.grid(test_user = unique(D_test$user),
                             pred_lg_weighted = NA,
                             pred_lg_unweighted = NA) %>% arrange(test_user, item)
 
+pred_df_total = data.frame()
+for(i in 1:length(unique(D_test$user))){
+  df_item = expand.grid(test_user = unique(D_test$user)[i], 
+                        item = sample(unique(D$item), size = 1000), 
+                        k = K)
+  pred_df_total = bind_rows(pred_df_total, df_item)
+  print(i)
+}
+
+# pred_df_total %>% group_by(test_user, k) %>% tally() %>% ungroup() %>% select(n) %>% unique()
+pred_df_total = pred_df_total %>% mutate(pred_cs_weighted = NA, 
+                                         pred_cs_unweighted = NA, 
+                                         pred_pc_weighted = NA,
+                                         pred_pc_unweighted = NA,
+                                         pred_lu_weighted = NA, 
+                                         pred_lu_unweighted = NA, 
+                                         pred_lg_weighted = NA,
+                                         pred_lg_unweighted = NA) %>% arrange(test_user, item)
 
 dim(pred_df_total)
 head(pred_df_total)
@@ -64,15 +86,13 @@ source('GitHub/RecommenderSystems/chunk_test_set_users.R')
 
 ## LiRa Gaussian - Pure Chance Standard Deviation Parameter
 sd_pc = 4
-## Setting k for kNN 
-K = c(3,5,7,10,15,20,30,40,50,60,80,160)
-eps = 0.001
+
 
 dim(pred_df_total)
 dim(D_train)
 
 i = 1
-num_users = 20 # length(unique(D_test$user))
+num_users = 5 # length(unique(D_test$user))
 
 user_times = rep(NA, num_users)
 for(i in 1:num_users){
@@ -102,10 +122,12 @@ for(i in 1:num_users){
     
     D_test_i = cbind(user = user_i, item = unique(pred_df_total_user_i$item)[j])
     
+    train_set = D_train
+    test_set = as.data.frame(D_test_i)
     
-    # get training values for item j
-    # exclude user i
+    # get training values for item j, excluding user i
     D_train_user_i_item_j = D_train %>% filter(item == user_i_item_j, user != user_i)
+    # grab the users
     potential_coraters_user_i_item_j = D_train_user_i_item_j %>% select(user) %>% .$user
     
     
@@ -122,23 +144,17 @@ for(i in 1:num_users){
     
     
     
-    # print(j)
-    # print(nrow(D_train_user_i_item_j))
-    
-    #stopifnot(nrow(D_train_user_i_item_j) > 0)
-    
+    # check if there are potential coraters 
+    # this can be a spot to put a fallback predictor
     if(length(potential_coraters_user_i_item_j) > 0){
       
-      #user_i
       
-      # unique(c(stored_sims_already_computed$user1, stored_sims_already_computed$user2))
-      # 
-      # potential_coraters_user_i_item_j
-      
+      # the set of coraters that don't have a similarity stored
       potential_coraters_user_i_item_j = setdiff(potential_coraters_user_i_item_j, 
                                                  unique(c(stored_sims_already_computed$user1, stored_sims_already_computed$user2)))
-      
+      # get data for coraters and original user
       potential_coraters_user_i_item_j_train_obs = D_train %>% filter(D_train$user %in% c(user_i, potential_coraters_user_i_item_j))
+      # reshape data to be ratings matrix format
       potential_coraters_user_i_item_j_train_obs_reshaped = dcast(data = potential_coraters_user_i_item_j_train_obs, formula = user ~ item, value.var = "rating")
 
       # dim(potential_coraters_user_i_item_j_train_obs_reshaped)
@@ -147,15 +163,7 @@ for(i in 1:num_users){
       rownames(potential_coraters_user_i_item_j_train_obs_reshaped) = potential_coraters_user_i_item_j_train_obs_reshaped$user
       potential_coraters_user_i_item_j_train_obs_reshaped = potential_coraters_user_i_item_j_train_obs_reshaped[,-1]
       
-      
-      # train_set = D_train
-      # test_set = D_test_i
-      # dim(potential_coraters_user_i_item_j_train_obs_reshaped)
-      # 
-      # potential_coraters_user_i_item_j_train_obs_reshaped[1:15,1:5]
-      
-      
-      # making sure row1 of matrix is the test user
+            # making sure row1 of matrix is the test user
       test_user_row = which(rownames(potential_coraters_user_i_item_j_train_obs_reshaped) == as.character(user_i))
       B_temp = potential_coraters_user_i_item_j_train_obs_reshaped[test_user_row,]
       
@@ -170,18 +178,13 @@ for(i in 1:num_users){
       rownames(potential_coraters_user_i_item_j_train_obs_reshaped)[test_user_row] = as.character(old_name)
       
       
-      # expand.grid(user1 = user_i, user2 = rownames(potential_coraters_user_i_item_j_train_obs_reshaped))
-      
-      
-      
-      # potential_coraters_user_i_item_j_train_obs_reshaped[1:15,1:5]
-      
-      
+      # forcing into matrix format for manipulation purposes
       potential_coraters_user_i_item_j_train_obs_reshaped = as.matrix(potential_coraters_user_i_item_j_train_obs_reshaped)
       
+      # the places where a prediction is needed
       k_error_df_lirau = pred_df_total_user_i %>% filter(item == user_i_item_j) #data.frame(user = user_i, item = user_i_item_j, K, k_current = NA, sim = "lira_uniform", weighted_pred = NA, unweighted_pred = NA)
       
-      
+      # after reshaping, is the matrix more than just the original user - is it possible that it's just the one user?
       if(nrow(potential_coraters_user_i_item_j_train_obs_reshaped) > 0){
         
         
@@ -191,12 +194,12 @@ for(i in 1:num_users){
                                                         similarity_measure = "lira_uniform")
         
         similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
+        similarity_vector = similarity_vector[-1]
         
         
+        stored_sims_already_computed = stored_sims_already_computed %>% select(user = user1, y = sim_lu) %>% filter(user != user_i)
         
-        stored_sims_already_computed = stored_sims_already_computed %>% select(user = user1, y = sim_lu) %>% filter(user != 1)
-        
-        
+        # storing newly computed similarities
         for(s in 1:length(similarity_vector)){
 
           stored_sim_matrix[which(((stored_sim_matrix$user1 == user_i & 
@@ -213,20 +216,19 @@ for(i in 1:num_users){
         #length(similarity_vector)
         #names(similarity_vector)
         
-        # stored_sims_already_computed
-        
+        # getting ratings and similarities together for newly computed neighbors
         neighbor_ratings_fresh = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
         neighbor_ratings_fresh = merge(neighbor_ratings_fresh[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
         
-        neighbor_ratings_precomputed = train_set[which(train_set$item == test_set$item & train_set$user %in%    stored_sims_already_computed$user),]
+        
+        # getting ratings and similarities together for stored neighbors
+        neighbor_ratings_precomputed = train_set[which(train_set$item == test_set$item & train_set$user %in% stored_sims_already_computed$user),]
         neighbor_ratings_precomputed = merge(neighbor_ratings_precomputed[c("user","rating")], stored_sims_already_computed, by.x = "user", by.y = "user")
         
         
-        
-        
-        
+        # putting the above together
         neighbor_ratings = bind_rows(neighbor_ratings_fresh, neighbor_ratings_precomputed) %>% arrange(desc(y))
-        neighbor_ratings = neighbor_ratings[-1,] 
+        #neighbor_ratings = neighbor_ratings[-1,] 
         
         # columns: k, k_current, ae_nn, ae_knn
         # dimensions: K * 4
@@ -257,6 +259,7 @@ for(i in 1:num_users){
           
         }
       }
+      
       pred_df_total[which(pred_df_total$test_user == user_i & 
                           pred_df_total$item == user_i_item_j),
                     c("pred_lu_weighted","pred_lu_unweighted")] = k_error_df_lirau[,c("weighted_pred","unweighted_pred")]
