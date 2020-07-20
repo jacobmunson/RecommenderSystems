@@ -15,6 +15,7 @@ source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
 D = read_csv("Recommender Systems - Home Folder/ml-latest-small/ratings.csv")
 colnames(D) = c("user","item","rating","timestamp")
 
+D = as_tibble(D)
 message("Splitting data...")
 dataset = D
 source('GitHub/RecommenderSystems/Handling Large Data/general_cross_validation.R')
@@ -34,7 +35,7 @@ stored_sim_matrix = expand.grid(user1 = unique(D$user),
 #stored_sim_matrix = as_tibble(stored_sim_matrix)
 
 ## Setting k for kNN 
-K = c(15,20)
+K = c(20)
 eps = 0.001
 
 
@@ -52,10 +53,11 @@ pred_df_total = expand.grid(test_user = unique(D_test$user),
                             pred_lg_weighted = NA,
                             pred_lg_unweighted = NA) %>% arrange(test_user, item)
 
+items_per_user = 1000 # need to put a line in this function such that an actual rated item (high rating) is included in the user's set of TopN
 pred_df_total = data.frame()
 for(i in 1:length(unique(D_test$user))){
   df_item = expand.grid(test_user = unique(D_test$user)[i], 
-                        item = sample(unique(D$item), size = 1000), 
+                        item = sample(unique(D$item), size = items_per_user, replace = F), 
                         k = K)
   pred_df_total = bind_rows(pred_df_total, df_item)
   print(i)
@@ -87,12 +89,10 @@ source('GitHub/RecommenderSystems/chunk_test_set_users.R')
 ## LiRa Gaussian - Pure Chance Standard Deviation Parameter
 sd_pc = 4
 
-
-dim(pred_df_total)
-dim(D_train)
+use_stored_similarity = F
 
 i = 1
-num_users = 5 # length(unique(D_test$user))
+num_users = length(unique(D_test$user))
 
 user_times = rep(NA, num_users)
 for(i in 1:num_users){
@@ -133,11 +133,14 @@ for(i in 1:num_users){
     
     # between test user and potential coraters - check if their similarity is stored in stored_sim_matrix
     
-    stored_sims_already_computed = stored_sim_matrix %>% 
-      filter(user1 %in% c(user_i,potential_coraters_user_i_item_j)| 
-               user2 %in% c(user_i,potential_coraters_user_i_item_j)) %>% 
-      select(user1, user2, sim_lu) %>% 
-      na.omit()
+    
+    if(use_stored_similarity){
+      stored_sims_already_computed = stored_sim_matrix %>% 
+        filter(user1 %in% c(user_i,potential_coraters_user_i_item_j)| 
+                 user2 %in% c(user_i,potential_coraters_user_i_item_j)) %>% 
+        select(user1, user2, sim_lu) %>% 
+        na.omit()
+    }
     
     # D_test_i[1,"user"]
     # potential_coraters_user_i_item_j
@@ -197,19 +200,22 @@ for(i in 1:num_users){
         similarity_vector = similarity_vector[-1]
         
         
-        stored_sims_already_computed = stored_sims_already_computed %>% select(user = user1, y = sim_lu) %>% filter(user != user_i)
+        if(use_stored_similarity){
+          stored_sims_already_computed = stored_sims_already_computed %>% 
+            select(user = user1, y = sim_lu) %>% filter(user != user_i)
+          
+          for(s in 1:length(similarity_vector)){
+            
+            stored_sim_matrix[which(((stored_sim_matrix$user1 == user_i & 
+                                        stored_sim_matrix$user2 == names(similarity_vector)[s]) | 
+                                       (stored_sim_matrix$user2 == user_i & 
+                                          stored_sim_matrix$user1 == names(similarity_vector)[s]))),"sim_lu"] = 
+              similarity_vector[s]
+          }
+        }
         
         # storing newly computed similarities
-        for(s in 1:length(similarity_vector)){
 
-          stored_sim_matrix[which(((stored_sim_matrix$user1 == user_i & 
-                                    stored_sim_matrix$user2 == names(similarity_vector)[s]) | 
-                                   (stored_sim_matrix$user2 == user_i & 
-                                    stored_sim_matrix$user1 == names(similarity_vector)[s]))),"sim_lu"] = 
-            similarity_vector[s]
-          
-          
-        }
         
         
         
@@ -222,12 +228,16 @@ for(i in 1:num_users){
         
         
         # getting ratings and similarities together for stored neighbors
-        neighbor_ratings_precomputed = train_set[which(train_set$item == test_set$item & train_set$user %in% stored_sims_already_computed$user),]
-        neighbor_ratings_precomputed = merge(neighbor_ratings_precomputed[c("user","rating")], stored_sims_already_computed, by.x = "user", by.y = "user")
+        
+        if(use_stored_similarity){
+          neighbor_ratings_precomputed = train_set[which(train_set$item == test_set$item & train_set$user %in% stored_sims_already_computed$user),]
+          neighbor_ratings_precomputed = merge(neighbor_ratings_precomputed[c("user","rating")], stored_sims_already_computed, by.x = "user", by.y = "user")
+          
+          # putting the above together
+          neighbor_ratings = bind_rows(neighbor_ratings_fresh, neighbor_ratings_precomputed) %>% arrange(desc(y))
+        }else{neighbor_ratings = neighbor_ratings_fresh}
         
         
-        # putting the above together
-        neighbor_ratings = bind_rows(neighbor_ratings_fresh, neighbor_ratings_precomputed) %>% arrange(desc(y))
         #neighbor_ratings = neighbor_ratings[-1,] 
         
         # columns: k, k_current, ae_nn, ae_knn
@@ -288,6 +298,10 @@ for(i in 1:num_users){
 
 summary(user_times)
 mean(user_times)
+
+sum(user_times)/24
+
+sum(user_times)/length(user_times)*length(unique(D_train$user))/24
 
 plot(user_times)
 
