@@ -164,8 +164,11 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                            
                                            
                                            # the set of coraters that don't have a similarity stored
-                                           potential_coraters_user_i_item_j = setdiff(potential_coraters_user_i_item_j, 
-                                                                                      unique(c(stored_sims_already_computed$user1, stored_sims_already_computed$user2)))
+                                           if(use_stored_similarity){
+                                             potential_coraters_user_i_item_j = setdiff(potential_coraters_user_i_item_j, 
+                                                                                        unique(c(stored_sims_already_computed$user1, stored_sims_already_computed$user2)))
+                                           }
+
                                            # get data for coraters and original user
                                            potential_coraters_user_i_item_j_train_obs = D_train %>% filter(D_train$user %in% c(user_i, potential_coraters_user_i_item_j))
                                            # reshape data to be ratings matrix format
