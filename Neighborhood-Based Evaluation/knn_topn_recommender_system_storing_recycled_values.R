@@ -40,27 +40,34 @@ eps = 0.001
 
 
 # Prediction dataframe to fill up
-pred_df_total = expand.grid(test_user = unique(D_test$user), 
-                            item = unique(D$item), 
-                            k = K, 
-                            #k_actual = NA, 
-                            pred_cs_weighted = NA, 
-                            pred_cs_unweighted = NA, 
-                            pred_pc_weighted = NA,
-                            pred_pc_unweighted = NA,
-                            pred_lu_weighted = NA, 
-                            pred_lu_unweighted = NA, 
-                            pred_lg_weighted = NA,
-                            pred_lg_unweighted = NA) %>% arrange(test_user, item)
+# pred_df_total = expand.grid(test_user = unique(D_test$user), 
+#                             item = unique(D$item), 
+#                             k = K, 
+#                             #k_actual = NA, 
+#                             pred_cs_weighted = NA, 
+#                             pred_cs_unweighted = NA, 
+#                             pred_pc_weighted = NA,
+#                             pred_pc_unweighted = NA,
+#                             pred_lu_weighted = NA, 
+#                             pred_lu_unweighted = NA, 
+#                             pred_lg_weighted = NA,
+#                             pred_lg_unweighted = NA) %>% arrange(test_user, item)
 
 items_per_user = 1000 # need to put a line in this function such that an actual rated item (high rating) is included in the user's set of TopN
 pred_df_total = data.frame()
+user_interest_threshold = 3.5
 for(i in 1:length(unique(D_test$user))){
   
+  user_i = unique(D_test$user)[i]
+  user_i_test_values = D_test %>% filter(user == user_i) %>% filter(rating >= user_interest_threshold)
+  
+  test_val_user_i = user_i_test_values[sample(x = 1:nrow(user_i_test_values), size = 1),]
+  
+  items_for_user_i = c(test_val_user_i$item, sample(unique(D$item), size = items_per_user, replace = F))
   
   
-  df_item = expand.grid(test_user = unique(D_test$user)[i], 
-                        item = sample(unique(D$item), size = items_per_user, replace = F), 
+  df_item = expand.grid(test_user = user_i, 
+                        item = items_for_user_i, 
                         k = K)
   pred_df_total = bind_rows(pred_df_total, df_item)
   print(i)
@@ -108,7 +115,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                      source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
                                      Rcpp::sourceCpp('GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
                                      shard_s = shards[[s]]
-                                     prediction_data_frame = c()
+                                     # prediction_data_frame = c()
                                      for(i in 1:length(shard_s)){
                                        user_i = shard_s[i] #unique(D_test$user)[i]
                                        # user_i = 1
@@ -207,7 +214,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              
                                              
                                              similarity_vector = compute_neighbor_similarity(user_item_matrix = potential_coraters_user_i_item_j_train_obs_reshaped,
-                                                                                             test_observation =test_set,
+                                                                                             test_observation = test_set,
                                                                                              similarity_measure = "lira_uniform")
                                              
                                              similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
@@ -282,11 +289,13 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }
                                            }
                                            
-                                           # pred_df_total[which(pred_df_total$test_user == user_i & 
-                                           #                       pred_df_total$item == user_i_item_j),
-                                           #               c("pred_lu_weighted","pred_lu_unweighted")] = k_error_df_lirau[,c("weighted_pred","unweighted_pred")]
+                                           pred_df_total[which(pred_df_total$test_user == user_i &
+                                                                 pred_df_total$item == user_i_item_j),
+                                                         c("pred_lu_weighted","pred_lu_unweighted")] = k_error_df_lirau[,c("pred_lu_weighted","pred_lu_unweighted")]
                                            
-                                           prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau) 
+                                           # prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau) 
+                                           
+                                           
                                            # start
                                            
                                            if(nrow(potential_coraters_user_i_item_j_train_obs_reshaped) > 0){
@@ -369,11 +378,11 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }
                                            }
                                            
-                                           # pred_df_total[which(pred_df_total$test_user == user_i & 
-                                           #                       pred_df_total$item == user_i_item_j),
-                                           #               c("pred_lg_weighted","pred_lg_unweighted")] = k_error_df_lirau[,c("weighted_pred","unweighted_pred")]
+                                           pred_df_total[which(pred_df_total$test_user == user_i &
+                                                                 pred_df_total$item == user_i_item_j),
+                                                         c("pred_lg_weighted","pred_lg_unweighted")] = k_error_df_lirau[,c("pred_lg_weighted","pred_lg_unweighted")]
                                            
-                                           prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau)
+                                           # prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau)
                                            
                                            ### end
                                            
@@ -459,10 +468,11 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }
                                            }
                                            
-                                           # pred_df_total[which(pred_df_total$test_user == user_i & 
-                                           #                       pred_df_total$item == user_i_item_j),
-                                           #               c("pred_pc_weighted","pred_pc_unweighted")] = k_error_df_lirau[,c("weighted_pred","unweighted_pred")]
-                                           prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau)
+                                           pred_df_total[which(pred_df_total$test_user == user_i &
+                                                                 pred_df_total$item == user_i_item_j),
+                                                         c("pred_pc_weighted","pred_pc_unweighted")] = k_error_df_lirau[,c("pred_pc_weighted","pred_pc_unweighted")]
+                                           
+                                           # prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau)
                                            ### end cosine
                                            
                                            
@@ -488,7 +498,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                      }
                                      
                                      
-                                     prediction_data_frame 
+                                     pred_df_total # prediction_data_frame 
                                      
                                      
                                    }
@@ -504,10 +514,10 @@ discordr::send_message(message = paste0("Mystery Machine done, took ",
 
 
 
+dim(sim_matrix)
+head(sim_matrix)
 
-
-
-
+sim_matrix %>% select(test_user, item) %>% group_by(test_user) %>% add_tally()
 
 
 
