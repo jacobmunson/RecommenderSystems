@@ -289,8 +289,8 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }
                                            }
                                            
-                                           pred_df_total[which(pred_df_total$test_user == user_i &
-                                                                 pred_df_total$item == user_i_item_j),
+                                           pred_df_total_user_i[which(pred_df_total_user_i$test_user == user_i &
+                                                                        pred_df_total_user_i$item == user_i_item_j),
                                                          c("pred_lu_weighted","pred_lu_unweighted")] = k_error_df_lirau[,c("pred_lu_weighted","pred_lu_unweighted")]
                                            
                                            # prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau) 
@@ -378,8 +378,8 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }
                                            }
                                            
-                                           pred_df_total[which(pred_df_total$test_user == user_i &
-                                                                 pred_df_total$item == user_i_item_j),
+                                           pred_df_total_user_i[which(pred_df_total_user_i$test_user == user_i &
+                                                                        pred_df_total_user_i$item == user_i_item_j),
                                                          c("pred_lg_weighted","pred_lg_unweighted")] = k_error_df_lirau[,c("pred_lg_weighted","pred_lg_unweighted")]
                                            
                                            # prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau)
@@ -468,8 +468,8 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }
                                            }
                                            
-                                           pred_df_total[which(pred_df_total$test_user == user_i &
-                                                                 pred_df_total$item == user_i_item_j),
+                                           pred_df_total_user_i[which(pred_df_total_user_i$test_user == user_i &
+                                                                        pred_df_total_user_i$item == user_i_item_j),
                                                          c("pred_pc_weighted","pred_pc_unweighted")] = k_error_df_lirau[,c("pred_pc_weighted","pred_pc_unweighted")]
                                            
                                            # prediction_data_frame = bind_rows(prediction_data_frame, k_error_df_lirau)
@@ -483,11 +483,11 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                          
                                          
                                          
-                                         cat("User:", user_i, "/", num_users, 
-                                             ", Item: ", user_i_item_j,"|" , 
-                                             j, "/", num_items ,
-                                             "->", round(j/num_items *100,2),"% finished on user", 
-                                             "| Percent users: ", round(i/num_users*100,2), "%", "\n")
+                                         # cat("User:", user_i, "/", num_users, 
+                                         #     ", Item: ", user_i_item_j,"|" , 
+                                         #     j, "/", num_items ,
+                                         #     "->", round(j/num_items *100,2),"% finished on user", 
+                                         #     "| Percent users: ", round(i/num_users*100,2), "%", "\n")
                                          
                                          
                                        }
@@ -498,7 +498,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                      }
                                      
                                      
-                                     pred_df_total # prediction_data_frame 
+                                     pred_df_total_user_i # prediction_data_frame 
                                      
                                      
                                    }
