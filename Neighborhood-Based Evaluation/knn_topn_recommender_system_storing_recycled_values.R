@@ -55,7 +55,7 @@ eps = 0.001
 
 items_per_user = 1000 # need to put a line in this function such that an actual rated item (high rating) is included in the user's set of TopN
 pred_df_total = data.frame()
-user_interest_threshold = 3.5
+user_interest_threshold = 5
 for(i in 1:length(unique(D_test$user))){
   
   user_i = unique(D_test$user)[i]
@@ -99,7 +99,7 @@ source('GitHub/RecommenderSystems/chunk_test_set_users.R')
 ## LiRa Gaussian - Pure Chance Standard Deviation Parameter
 sd_pc = 4
 
-
+use_stored_similarity = F
 rm(sim_matrix);gc() # 
 start = Sys.time()
 
@@ -108,14 +108,16 @@ cl <- makePSOCKcluster(num_cores)
 registerDoParallel(cl)
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 
-sim_matrix = foreach(s = 1:num_shards, .combine = rbind, 
+sim_matrix = foreach(s = 1:2, .combine = rbind, 
                      .packages = c("dplyr","reshape2","Rcpp"),
                      .noexport = c("top_n", "lira_loop", "lira_gaussian_loop", 
                                    "correlationCoefficient", "cosine_vector_similarity")) %dopar% {
+                                  
                                      source('GitHub/RecommenderSystems/recommender_systems_helper_functions.R')
                                      Rcpp::sourceCpp('GitHub/RecommenderSystems/Handling Large Data/Rcpp/neighborhood_based_evaluation_helper_files.cpp')
                                      shard_s = shards[[s]]
                                      # prediction_data_frame = c()
+                                     print(s)
                                      for(i in 1:length(shard_s)){
                                        user_i = shard_s[i] #unique(D_test$user)[i]
                                        # user_i = 1
@@ -128,7 +130,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                        
                                        start = Sys.time()
                                        
-                                       for(j in 1:num_items ){
+                                       for(j in 1:num_items){
                                          
                                          
                                          # pred_df_total_user_i %>% filter(item == unique(pred_df_total_user_i$item)[j])
@@ -218,7 +220,8 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                                                                              similarity_measure = "lira_uniform")
                                              
                                              similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
-                                             similarity_vector = similarity_vector[-1]
+                                             #similarity_vector = similarity_vector[-1]
+                                             
                                              
                                              
                                              if(use_stored_similarity){
@@ -239,8 +242,11 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              
                                              
                                              # getting ratings and similarities together for newly computed neighbors
+                                             
+                                             
                                              neighbor_ratings_fresh = train_set[which(train_set$item == test_set$item & train_set$user %in% names(similarity_vector)),]
                                              neighbor_ratings_fresh = merge(neighbor_ratings_fresh[c("user","rating")], similarity_vector, by.x = "user", by.y = "row.names")
+                                             
                                              
                                              
                                              # getting ratings and similarities together for stored neighbors
@@ -254,8 +260,16 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              }else{neighbor_ratings = neighbor_ratings_fresh}
                                              
                                              
-                                             #neighbor_ratings = neighbor_ratings[-1,] 
+                                             
+                                              
                                              neighbor_ratings = neighbor_ratings_fresh 
+                                             
+                                             neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+                                             
+                                             if(any(neighbor_ratings$user == test_set$user)){
+                                               neighbor_ratings = neighbor_ratings[-which(neighbor_ratings$user == test_set$user),]
+                                             }
+                                             
                                              
                                              # columns: k, k_current, ae_nn, ae_knn
                                              # dimensions: K * 4
@@ -307,7 +321,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                                                                              similarity_measure = "lira_gaussian_pure_chance")
                                              
                                              similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
-                                             similarity_vector = similarity_vector[-1]
+                                             #similarity_vector = similarity_vector[-1]
                                              
                                              
                                              if(use_stored_similarity){
@@ -345,6 +359,12 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              
                                              #neighbor_ratings = neighbor_ratings[-1,] 
                                              neighbor_ratings = neighbor_ratings_fresh 
+                                             
+                                             neighbor_ratings = neighbor_ratings %>% arrange(desc(y))
+                                             
+                                             if(any(neighbor_ratings$user == test_set$user)){
+                                               neighbor_ratings = neighbor_ratings[-which(neighbor_ratings$user == test_set$user),]
+                                             }
                                              
                                              # columns: k, k_current, ae_nn, ae_knn
                                              # dimensions: K * 4
@@ -396,7 +416,7 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                                                                              similarity_measure = "pearson_pwc")
                                              
                                              similarity_vector = nearest_neighbors_trimming_function(similarity_vector_with_self_similarity = similarity_vector)
-                                             similarity_vector = similarity_vector[-1]
+                                             #similarity_vector = similarity_vector[-1]
                                              
                                              
                                              if(use_stored_similarity){
@@ -434,6 +454,10 @@ sim_matrix = foreach(s = 1:num_shards, .combine = rbind,
                                              
                                              #neighbor_ratings = neighbor_ratings[-1,] 
                                              neighbor_ratings = neighbor_ratings_fresh 
+                                             
+                                             if(any(neighbor_ratings$user == test_set$user)){
+                                               neighbor_ratings = neighbor_ratings[-which(neighbor_ratings$user == test_set$user),]
+                                             }
                                              
                                              # columns: k, k_current, ae_nn, ae_knn
                                              # dimensions: K * 4
