@@ -8,5 +8,5 @@ chunk = function(vector, num_splits){return(split(vector, factor(sort(rank(vecto
 
 
 num_shards = num_cores*shard_multiplier
-shards = chunk(vector = unique(D_train$user), num_splits = num_shards)
+shards = chunk(vector = unique(D_test$user), num_splits = num_shards)
 names(shards) = seq(1,num_shards,1)
