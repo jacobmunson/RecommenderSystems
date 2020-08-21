@@ -1,6 +1,8 @@
 #getwd()
 #data = readLines("NetflixPrizeData/combined_data_1.txt")
 
+
+library(dplyr)
 df = data.frame()
 
 for(data_id in 1:5){
