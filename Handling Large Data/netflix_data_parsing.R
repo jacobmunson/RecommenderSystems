@@ -2,9 +2,9 @@ library(dplyr)
 df_total = data.frame()
 
 start_outer = Sys.time()
-for(data_id in 1:5){
+for(data_id in 1:4){
   message("Reading data...")
-  path = paste0("~/NetflixPrizeData/combined_data_", data_id ,".txt")
+  path = paste0("NetflixPrizeData/combined_data_", data_id ,".txt")
   data = readLines(path)
   total = length(data)
   
@@ -21,7 +21,7 @@ for(data_id in 1:5){
     }
     
     if(i %% 10000 == 0){
-      cat("Dataset ", data_id, " out of ", 5, " | Percent item ID locations found: ", round(100*i/total,3), " %", "\n")
+      cat("Dataset ", data_id, " out of ", 4, " | Percent item ID locations found: ", round(100*i/total,3), " %", "\n")
     }
   }
   
@@ -79,3 +79,4 @@ for(data_id in 1:5){
 end_outer = Sys.time()
 
 print(end_outer - start_outer)
+
