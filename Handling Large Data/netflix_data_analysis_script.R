@@ -122,9 +122,10 @@ date_last = last(nf_dates)
 
 (date_last - date_first)/30
 
-nf_dates
+#nf_dates
 
-length(nf_dates)
+print(paste0("Years of data:", length(nf_dates)/365))
+
 
 date_range = seq.Date(from = date_first, to = date_last, by = "day")
 
@@ -135,7 +136,7 @@ date_chunks = chunk(vector = date_range, num_splits = 30)
 # selecting a bin to move forward with example numbers
 bin_i = 20
 
-# need mean NF rating
+# Mean rating of Netflix rating
 mu_nf = mean(netflix_data$rating)
 
 ###########################
@@ -148,7 +149,7 @@ mu_nf = mean(netflix_data$rating)
 #######################
 
 ## Select an item
-item_i = 1000
+item_i = 985
 
 ## Static Bias for Item ##
 
@@ -237,7 +238,8 @@ print(paste0("Mean date of rating is ", t_u))
   
 # Get date of rating
 t = netflix_data %>% 
-  filter(date %in% date_chunks[[bin_i]], user == user_u, item == item_i) %>% 
+  filter(date %in% date_chunks[[bin_i]], 
+         user == user_u, item == item_i) %>% 
   select(date) %>% .$date 
 print(paste0("Date of user rating is ", t))
 
@@ -266,6 +268,17 @@ r_ui = netflix_data %>%
   filter(row_number() == 1) %>% .$rating
 
 # baseline estimate involving mean term, time-dependent item bias, and time-dependent user bias
-b_ui = mu_nf + b_it + b_ut
 
+b_ui = mu_nf + b_i + b_u
+b_ui_t = mu_nf + b_it + b_ut
+
+movie_titles <- read_csv("NetflixPrizeData/movie_titles.csv", col_names = FALSE)
+colnames(movie_titles) = c("item_id", "year", "title")
+movie_name = movie_titles %>% filter(item_id == item_i) %>% .$title
+
+print(paste0("User = ", user_u, " | Item = ", item_i, " | ", movie_name ," | r_ui = ", r_ui))
 print(paste0("Actual test value is ", r_ui, " and baseline estimate is ", b_ui))
+print(paste0("Actual test value is ", r_ui, " and time-dependent baseline estimate is ", b_ui_t))
+
+
+
