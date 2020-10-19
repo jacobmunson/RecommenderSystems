@@ -220,6 +220,17 @@ mu_u = netflix_data %>%
 
 print(paste0("Mean for user ", user_u, " is ", mu_u)) # mean of user_u
 
+
+user_u_count = netflix_data %>% 
+  filter(user == user_u) %>% 
+  select(item) %>% tally() %>% .$n
+print(paste0("User ", user_u, " has rated ", user_u_count, " items.")) # 
+
+user_u_ratings = inner_join((netflix_data %>% 
+  filter(user == user_u)), 
+  movie_titles, by = c("item" = "item_id"))
+
+
 # Bias for User u
 b_u = mu_u - mu_nf 
 print(paste0("Bias for user ", user_u, " is ", b_u)) # bias of user u
@@ -251,8 +262,14 @@ dev_u_t = as.numeric(sign(t - t_u)) * abs(as.numeric(t - t_u))^beta
 alpha_u = 0.001 # Set for all, but adjusted in SGD
 print(paste0("Deviation for user ", user_u, " during time ", t, " is ", dev_u_t)) # deviation of user u during time t
 
+
+# Bias of User u at time t
+mu_u_t = netflix_data %>% filter(user == user_u, date == t) %>% summarize(mu_u_t = mean(rating)) %>% .$mu_u_t
+b_u_t = mu_u_t - mu_nf 
+
+
 # Bias for User u at time t
-b_ut = b_u + alpha_u*dev_u_t 
+b_ut = b_u + alpha_u*dev_u_t + b_u_t
 print(paste0("Bias for user ", user_u, " during time ", t, " is ", b_ut)) # bias of user u during time t
 
 ## End Time Bias for User ##
