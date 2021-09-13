@@ -2,10 +2,11 @@
 
 library(lubridate)
 library(ggplot2)
-
+library(tidyverse)
 
 netflix_data <- read_csv("NetflixPrizeData/netflix_data.csv", col_types = cols(date = col_date(format = "%Y-%m-%d")))
 
+chunk = function(vector, num_splits){return(split(vector, factor(sort(rank(vector) %% num_splits))))}
 #netflix_data = netflix_data %>% mutate(date = as_date(date))
 
 
@@ -239,8 +240,14 @@ print(paste0("Bias for user ", user_u, " is ", b_u)) # bias of user u
 
 ## Time Bias for User ##
 
-# Get mean date of rating
-t_u = first(date_range) + ((last(date_range) - first(date_range))/2)
+# Get mean date of rating for user u
+
+t_u = netflix_data %>% 
+  filter(user == user_u) %>% arrange(date) %>% 
+  summarize(first_date = first(date), 
+            last_date = last(date), 
+            t_u = first_date + ((last_date - first_date)/2)) %>% .$t_u
+
 print(paste0("Mean date of rating is ", t_u))
 
 
