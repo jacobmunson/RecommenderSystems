@@ -1,9 +1,13 @@
 setwd("~/Documents")
 
+if(dataset == "ML1M"){
+  ratings <- read.table("Recommender Systems - Home Folder/ml-1m/ratings.dat")
+}
+if(dataset == "ML10M"){
+  ratings <- read.table("Recommender Systems - Home Folder/ml-10M/ratings.dat")
+}
 
-ratings <- read.table("Recommender Systems - Home Folder/ml-1m/ratings.dat")
-ratings <- read.table("Recommender Systems - Home Folder/ml-10M/ratings.dat")
-ratings <- read.table("~/Documents/Recommender Systems - Mystery Machine/ml-10M/ratings.dat")
+#ratings <- read.table("~/Documents/Recommender Systems - Mystery Machine/ml-10M/ratings.dat")
 
 library(dplyr)
 # Format user::item::rating::timestamp
