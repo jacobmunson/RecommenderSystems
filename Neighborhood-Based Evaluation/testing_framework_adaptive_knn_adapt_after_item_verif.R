@@ -19,8 +19,8 @@ message("Splitting data...")
 dataset = D
 source('GitHub/RecommenderSystems/Handling Large Data/general_cross_validation.R')
 
-D_train = D1_train # D[train_index,]
-D_test = D1_test # D[-train_index,]
+D_train = D5_train # D[train_index,]
+D_test = D5_test # D[-train_index,]
 nrow(D_test);nrow(D_train)
 
 
@@ -36,7 +36,7 @@ source('GitHub/RecommenderSystems/chunk_test_set.R')
 sd_pc = 4
 use_lira = T; use_pearson_pwc = T; use_lira_gauss = T; use_cosine = T
 ## Setting k for kNN 
-K = c(10,15,20,30)# 3,5,7, 40,50,60,80,160)
+K = c(3,5,10,15,20,30,50,80,160)# 3,5,7, 40,50,60,80,160)
 
 ## Start Evaluation
 rm(sim_matrix);gc() # 
@@ -57,28 +57,19 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
   print(i)
   k_error_df_total = c() # work on predefining this maybe
   
-
+  # i = 39
   D_subset = D_test[shards[[i]],]
-
   
-
- 
-  # min_num_sim = 3 # minimum number of neighbors to require before engaging in trimming
- # tau = NULL; # SET "tau = NULL" is no quantile trimming desired #sd_scale = 2
-  # lower_q = 0.25; upper_q = 1 - lower_q
-  # stopifnot(lower_q + upper_q == 1)
-  # eps = 0.001 # to ensure that if only 1 nearest neighbor and their sim is negative that mapping onto [0,1] doesn't make their similarity = 0
+  # j = which(D_subset$user == 90 & D_subset$item == 581)
   
   for(j in 1:nrow(D_subset)){
-    print(j) # j = 60
+    # print(j) # j = 60
     D_test_i = D_subset[j,]
     
     potential_coraters = D_train %>% filter(D_train$item == D_test_i$item) %>% select(user)
     if(nrow(potential_coraters) > 0){
       A = D_train %>% filter(D_train$user %in% c(D_test_i$user,potential_coraters$user))
       B = dcast(data = A, formula = user~item, value.var = "rating")
-      ####B = B[order(B$user),]
-      
       rownames(B) = B$user
       B = as.matrix(B[,-1]) # unaltered from here on out
       
@@ -98,6 +89,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
       
       B = B[which(rownames(B) %in% train_set$user),] # only carry around actual co-raters
       
+      # for fallback predictions
       user_avg = train_set %>% filter(user == test_set$user) %>% summarize(mu_user = mean(rating)) %>% .$mu_user
       ae = abs(user_avg - test_set$rating)
       
@@ -132,7 +124,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
               
               k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
               
-              pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y))
+              pred_rating_nn = sum(prediction_neighbors$rating * abs(prediction_neighbors$y))/sum(abs(prediction_neighbors$y))
               k_error_df_lirau[k,"pred_nn"] = pred_rating_nn 
               k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
               
@@ -163,9 +155,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
           
           
         }
-        
-        
-        
+       
         k_error_df_total = bind_rows(k_error_df_total, k_error_df_lirau)
       }
 
@@ -204,7 +194,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
               
               k_error_df_lirau[k,"k_current"] = nrow(prediction_neighbors)
               
-              pred_rating_nn = sum(prediction_neighbors$rating * prediction_neighbors$y)/sum(abs(prediction_neighbors$y))
+              pred_rating_nn = sum(prediction_neighbors$rating * abs(prediction_neighbors$y))/sum(abs(prediction_neighbors$y))
               k_error_df_lirau[k,"pred_nn"] = pred_rating_nn
               k_error_df_lirau[k,"ae_nn"] = abs(pred_rating_nn - test_set$rating)
               
@@ -381,9 +371,7 @@ sim_matrix = foreach(i = 1:num_shards, .combine = rbind,
       
       train_set = D_train
       test_set = D_test_i
-      
 
-      
       if(use_lira){
         k_error_df_lirau = data.frame(user = test_set$user, item = test_set$item, K = NA, 
                                       k_current = NA, sim = "lira_uniform", 
@@ -431,32 +419,92 @@ discordr::send_message(message = paste0("Mystery Machine done, took ",
 # EXAMINE BEFORE SAVING
 head(sim_matrix, n = 15) # visual inspection
 
-D_sim = c()
+#D_sim = c()
 D_sim = bind_rows(D_sim, sim_matrix) 
 
-#D_100ml_non_bm_test = c()
-D_100ml_non_bm_test = bind_rows(D_100ml_non_bm_test, sim_matrix)
-
-D_100ml_non_bm_test %>%
+A = D_sim %>%
     group_by(sim, K) %>%
-  summarize(MAE_nn = mean(ae_nn, na.rm = T)) %>% #ungroup() %>% 
-  ggplot(aes(x = K, y = MAE_nn, group = `sim`, color = `sim`)) + 
-  geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1)  # + ggtitle("MovieLens - 100k - latest")
+  summarize(MAE = mean(ae_knn, na.rm = T)) %>% #ungroup() %>% 
+  ggplot(aes(x = K, y = MAE, group = `sim`, color = `sim`)) + 
+  geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1) + 
+  ggtitle("MovieLens - 100k - latest", subtitle = "Unweighted")
 
-data = D_100ml_non_bm_test
+B = D_sim %>%
+  group_by(sim, K) %>%
+  summarize(MAE = mean(ae_nn, na.rm = T)) %>% #ungroup() %>% 
+  ggplot(aes(x = K, y = MAE, group = `sim`, color = `sim`)) + 
+  geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1) + 
+  ggtitle("MovieLens - 100k - latest", subtitle = "Weighted")
+
+C = D_sim %>%
+  group_by(sim, K) %>%
+  summarize(RMSE = sqrt(mean(ae_knn^2, na.rm = T))) %>% #ungroup() %>% 
+  ggplot(aes(x = K, y = RMSE, group = `sim`, color = `sim`)) + 
+  geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1) + 
+  ggtitle("MovieLens - 100k - latest", subtitle = "Unweighted")
+
+D = D_sim %>%
+  group_by(sim, K) %>%
+  summarize(RMSE = sqrt(mean(ae_nn^2, na.rm = T))) %>% #ungroup() %>% 
+  ggplot(aes(x = K, y = RMSE, group = `sim`, color = `sim`)) + 
+  geom_point(color="black", size=2) + geom_line(linetype="dashed", size=1) + 
+  ggtitle("MovieLens - 100k - latest", subtitle = "Weighted")
+
+
+cowplot::plot_grid(A, B, C, D)
+
+
+
+data = D_sim
 data %>% 
-  group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
-summarize(MAE_nn = mean(ae_nn, na.rm = T), 
-          RMSE_nn = sqrt(mean(ae_nn^2, na.rm = T)), 
-          sd_nn = sd(ae_nn, na.rm = T)) %>% #print(n = 72)
+  group_by(sim, K) %>% filter(!is.na(K)) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+  summarize(MAE_nn = mean(ae_knn, na.rm = T), 
+            RMSE_nn = sqrt(mean(ae_knn^2, na.rm = T)), 
+            sd_nn = sd(ae_knn, na.rm = T)) %>% #print(n = 72)
+  group_by(sim) %>%
+  summarize(min_mae = min(RMSE_nn)) %>%
+  inner_join(data %>% filter(!is.na(K)) %>%
+               group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+               summarize(MAE_nn = mean(ae_knn, na.rm = T), 
+                         RMSE_nn = sqrt(mean(ae_knn^2, na.rm = T)), 
+                         sd_nn = sd(ae_knn, na.rm = T)),
+             by = c("sim" = "sim", "min_mae" = "RMSE_nn")) %>% 
+  arrange(min_mae)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+data %>% 
+  group_by(sim, K) %>% filter(!is.na(K)) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
+summarize(MAE_nn = mean(ae_knn, na.rm = T), 
+          RMSE_nn = sqrt(mean(ae_knn^2, na.rm = T)), 
+          sd_nn = sd(ae_knn, na.rm = T)) %>% #print(n = 72)
 group_by(sim) %>%
-summarize(min_mae = min(MAE_nn)) %>%
-inner_join(data %>%
+summarize(min_mae = min(RMSE_nn)) %>%
+inner_join(data %>% filter(!is.na(K)) %>%
              group_by(sim, K) %>% #filter(sim != "lira_bin", sim != "lira_mn") %>%
-             summarize(MAE_nn = mean(ae_nn, na.rm = T), 
-                       RMSE_nn = sqrt(mean(ae_nn^2, na.rm = T)), 
-                       sd_nn = sd(ae_nn, na.rm = T)),
-           by = c("sim" = "sim", "min_mae" = "MAE_nn")) %>% 
+             summarize(MAE_nn = mean(ae_knn, na.rm = T), 
+                       RMSE_nn = sqrt(mean(ae_knn^2, na.rm = T)), 
+                       sd_nn = sd(ae_knn, na.rm = T)),
+           by = c("sim" = "sim", "min_mae" = "RMSE_nn")) %>% 
   arrange(min_mae) %>% 
   inner_join(data %>% 
                group_by(sim) %>% 
