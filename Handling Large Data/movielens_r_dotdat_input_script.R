@@ -16,7 +16,7 @@ library(tidyverse)
 D = gsub(x = ratings$V1, pattern = "::", replacement = " ") # general substitution
 D = matrix(data = as.numeric(unlist(strsplit(D, "\\s+"))), ncol = 4, byrow = TRUE) # filling in matrix
 colnames(D) = c("user","item","rating","timestamp")
-D = as_tibble(D)
+D = as_tibble(D); remove(ratings); gc()
 head(D) # visual check
 dim(D) # how many? 
 
