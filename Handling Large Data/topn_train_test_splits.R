@@ -13,6 +13,7 @@ D_train = anti_join(D, D_test)
 nrow(D_train) + nrow(D_test) == nrow(D)
 
 
+
 ### Hold out TopX Percentage of samples per user
 X = 0.2 # 20% of highest ratings per user are for hold out
 D_test = D %>% group_by(user) %>% slice_max(rating, prop = X) %>% ungroup()
