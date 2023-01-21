@@ -23,7 +23,6 @@ length(unique(D$item))
 R = sparseMatrix(i = D$user_adj, j = D$item_adj, x = D$rating, dims = c(num_rows, num_cols))
 
 
-
 dim(R %*% t(R))
 
 dim(t(R) %*% R)
