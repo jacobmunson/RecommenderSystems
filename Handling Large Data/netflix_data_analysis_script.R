@@ -1,4 +1,4 @@
-# Identifying the effects in the Koren (2009) paper
+# Identifying the effects in the Koren (2009) paper, Collaborative Filtering with Temporal Dynamics
 
 library(lubridate)
 library(ggplot2)
@@ -64,11 +64,12 @@ nf_by_date %>%
 library(lubridate)
 item_df = data.frame()
 
-index = sample(1:nrow(netflix_data), size = 100000) # dealing with a subset of the data 
+index = sample(1:nrow(netflix_data), size = 100000) # 0.1*nrow(netflix_data) # dealing with a subset of the data 
 nf_subset = netflix_data[index,] # repeat this process several time
 
 num_items = length(unique(nf_subset$item)) 
 #num_items = length(unique(netflix_data$item))
+pb = txtProgressBar(min = 0, max = num_items, initial = 0) 
 
 start = Sys.time() # compute rolling mean rating by age of item - "age" = time since first rating
 for(i in 1:num_items){
@@ -79,7 +80,7 @@ for(i in 1:num_items){
     filter(item == item_i) %>% 
     arrange(date) %>%
     mutate(first_rating = min(date), days_old = date - first_rating) %>% 
-    group_by(days_old) %>% summarize(rating = mean(rating)) 
+    group_by(days_old) %>% summarize(rating = mean(rating), .groups = 'drop')# %>% ungroup() 
 
   item_i_data = item_i_data %>% mutate(roll_mean = NaN)
   
@@ -90,26 +91,86 @@ for(i in 1:num_items){
     item_i_mu = mean(item_i_data[1:j,"rating"] %>% .$rating)
     item_i_data[j,"roll_mean"] = item_i_mu
   }
-  
+  setTxtProgressBar(pb,i)
   item_df = bind_rows(item_df, item_i_data)
-  print(i)
+  #print(i)
 }
+close(pb)
 end = Sys.time()
 print(end - start); beepr::beep(3)
 
 
+start = Sys.time()
 item_df %>% group_by(days_old) %>% summarize(mu_rating = mean(roll_mean)) %>% 
   ggplot(aes(x = days_old, y = mu_rating)) + geom_point(alpha = 0.25) + 
   ylim(3.2,3.9) + 
-  #geom_smooth() + 
+  geom_smooth() + 
+  theme_bw() + 
+  ylab("Mean Rating") + xlab("Film Age (days)") + 
+  ggtitle("Rating by Film Age", subtitle = "Netflix Data") + 
+  theme(text = element_text(size=20))
+end = Sys.time()
+print(end - start); beepr::beep(3)
+####################
+### End Effect 2 ###
+####################
+
+#########################################
+### Tikz Graphics for the two effects ###
+#########################################
+
+library(tikzDevice)
+
+tikz(file = "netflix_plot_effect2.tex", width = 10, height = 5)
+
+
+# plot 1: "rmse_vs_iterations.tex"
+# plot 2: "rmse_vs_iterations.tex"
+
+#plot = annotate_figure(err_plot, top = text_grob("RMSE vs. Iterations", 
+#                                                 color = "black", face = "bold", size = 14))
+
+
+plot = item_df %>% group_by(days_old) %>% summarize(mu_rating = mean(roll_mean)) %>% 
+  ggplot(aes(x = days_old, y = mu_rating)) + geom_point(alpha = 0.25) + 
+  ylim(3.2,3.9) + 
+  geom_smooth() + 
   theme_bw() + 
   ylab("Mean Rating") + xlab("Film Age (days)") + 
   ggtitle("Rating by Film Age", subtitle = "Netflix Data") + 
   theme(text = element_text(size=20))
 
-####################
-### End Effect 2 ###
-####################
+#plot = annotate_figure(plot, )
+
+#plot = annotate_figure(err_vs_courses_plot, top = text_grob("Error vs. Number of Train Courses Per Student", 
+#                                                            color = "black", face = "bold", size = 14))
+
+print(plot)
+dev.off()
+
+
+
+
+library(tikzDevice)
+tikz(file = "netflix_plot_effect1.tex", width = 10, height = 5)
+
+
+plot = nf_by_date %>% 
+  ggplot(aes(x = date, y = mu)) + 
+  geom_point(alpha = 0.35) + theme_bw() +
+  ylab("Mean Rating") + 
+  xlab("Date") + 
+  ggtitle(subtitle = "Netflix Data", "Mean Rating through Time") + 
+  geom_smooth() + 
+  ylim(3,3.9) + 
+  theme(text = element_text(size=20))
+
+print(plot)
+dev.off()
+
+###########
+### end ###
+###########
 
 
 ############################################
